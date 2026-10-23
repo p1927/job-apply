@@ -54,20 +54,27 @@ check replies    →  read your inbox, log outcomes, draft answers
 ## How it works
 
 ```mermaid
-flowchart LR
-    A([You: "I want to apply for jobs"]) --> B[Setup skill<br/>installs tools, interviews you]
-    B --> C[(Your private folder<br/>rules · facts · resume · ledger)]
-    C --> D[Search<br/>LinkedIn · company pages · job boards]
-    D --> E{Passes<br/>your rules?}
-    E -- no --> F[Ledger: not relevant<br/>+ reason]
-    E -- yes --> G[Tailored resume<br/>+ saved posting]
-    G --> H[Apply on the<br/>company's own site]
-    H --> I[Company file:<br/>answers, confirmation]
-    I --> J[Weekday follow-up<br/>email + LinkedIn, read only]
-    J --> K[Board · outcomes · lessons]
-    K -. new answers and quirks .-> C
-    H -. CAPTCHA, login, unknown fact .-> L([Pauses and asks you])
-    L --> H
+flowchart TB
+    A(["You say: I want to apply for jobs"]) --> B["Setup skill installs tools and interviews you"]
+    B --> C[("Your private folder: rules, facts, resume, ledger")]
+    C --> D["Search LinkedIn, company pages and job boards"]
+    D --> E{"Passes your rules?"}
+    E -->|no| F["Ledger: not relevant, with a reason"]
+    E -->|yes| G["Tailored resume and saved posting"]
+    G --> H["Apply on the company's own site"]
+    H --> I["Company file: answers and confirmation"]
+    I --> J["Weekday follow-up: email and LinkedIn, read only"]
+    J --> K["Board, outcomes and lessons"]
+    K -.->|new answers and quirks| C
+    H -.->|CAPTCHA, login or unknown fact| L(["Pauses and asks you"])
+    L -.-> H
+
+    classDef you fill:#fde68a,stroke:#b45309,color:#1f2937
+    classDef store fill:#dbeafe,stroke:#1d4ed8,color:#1f2937
+    classDef step fill:#f1f5f9,stroke:#475569,color:#1f2937
+    class A,L you
+    class C,K store
+    class B,D,E,F,G,H,I,J step
 ```
 
 ## Your data is yours
