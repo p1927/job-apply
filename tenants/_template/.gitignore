@@ -1,0 +1,6 @@
+# keep scratch and bulky files out of the backup
+.tmp-*
+*.part
+career-ops/node_modules/
+career-ops/cv.md
+.DS_Store

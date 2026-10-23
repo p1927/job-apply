@@ -1,0 +1,12 @@
+{
+ "_comment": "Resume content for tools/make_resumes.py. Facts must come from candidate-profile.md. Tailoring only selects and orders; the summary is the only new prose.",
+ "contact_footer": "",
+ "banned_claims": [],
+ "experience": [],
+ "skills": {},
+ "projects": {},
+ "education": [],
+ "configs": {
+  "base": {"out": "resume", "headline": "", "summary": "", "select": {}, "skills": [], "projects": []}
+ }
+}

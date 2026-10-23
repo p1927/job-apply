@@ -1,0 +1,9 @@
+# Personal data never enters the engine repo. Each person's folder under tenants/ is its own (private) repo or a local folder.
+tenants/*
+!tenants/_template/
+!tenants/README.md
+.engine-maintainer
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store

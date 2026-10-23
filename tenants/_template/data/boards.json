@@ -1,0 +1,6 @@
+{
+ "_comment": "Company career boards for tools/search_boards.py. provider: gh=Greenhouse, ash=Ashby, lev=Lever. location is a regex a job location must match. Fill from the categories and target companies in REQUIREMENTS.md.",
+ "boards": {},
+ "location": {},
+ "title_regex": "\\b(AI|ML|LLM|Engineer)\\b"
+}

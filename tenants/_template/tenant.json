@@ -1,0 +1,10 @@
+{
+  "id": "{{ID}}",
+  "name": "{{NAME}}",
+  "email": "",
+  "phone": "",
+  "git_name": "",
+  "git_email": "",
+  "track_labels": {"primary": "Target roles", "secondary": "Secondary roles"},
+  "requirement_labels": {"pay": "Pay", "role": "Role", "mode": "Mode", "office": "Office days", "location": "Location", "learning": "Learning"}
+}

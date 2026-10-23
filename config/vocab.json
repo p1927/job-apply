@@ -1,0 +1,83 @@
+{
+ "ledger_status": [
+  "New",
+  "Relevant",
+  "Not-relevant",
+  "Applied",
+  "Closed"
+ ],
+ "ledger_reason_codes": [
+  "wrong-role",
+  "not-ai",
+  "swe-secondary",
+  "location",
+  "on-site",
+  "consultancy",
+  "staffing",
+  "manager",
+  "contract",
+  "startup",
+  "language",
+  "clearance",
+  "low-pay",
+  "seniority",
+  "research",
+  "duplicate",
+  "already-applied",
+  "posting-gone",
+  "other"
+ ],
+ "ledger_blockers": [
+  "",
+  "captcha",
+  "account",
+  "upload",
+  "fact",
+  "other"
+ ],
+ "app_status": [
+  "Shortlisted",
+  "Applied",
+  "Screening",
+  "Interview",
+  "Offer",
+  "Rejected",
+  "Withdrawn",
+  "Dropped"
+ ],
+ "categories": [
+  "Local",
+  "Remote",
+  "Other"
+ ],
+ "tracks": [
+  "primary",
+  "secondary"
+ ],
+ "csv_header": [
+  "job_id",
+  "category",
+  "company",
+  "title",
+  "location",
+  "workplace",
+  "status",
+  "reason",
+  "blocker",
+  "app_id",
+  "source",
+  "note"
+ ],
+ "workplace_values": [
+  "Remote",
+  "Hybrid",
+  "On-site",
+  "Unknown"
+ ],
+ "source_values": [
+  "linkedin",
+  "company",
+  "board",
+  "recruiter"
+ ]
+}
