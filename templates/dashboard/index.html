@@ -25,16 +25,7 @@
 <div id="scrim" hidden></div>
 <aside id="drawer" class="drawer" aria-label="Application details" hidden></aside>
 
-<form class="ask" id="ask" autocomplete="off">
-  <div class="ask-inner">
-    <div class="ask-ctx" id="askCtx"></div>
-    <div class="ask-row">
-      <input id="askText" type="text" placeholder="Want a change? Tell Claude, for example: raise my minimum pay to 90k" aria-label="Message for Claude" maxlength="1000">
-      <button class="btn primary" type="submit" id="askBtn">Ask Claude</button>
-    </div>
-    <div class="chips" id="askChips"></div>
-  </div>
-</form>
+<button class="ask-fab" id="askBtn" type="button" data-ask="">Ask Claude</button>
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="/ui/app.js"></script>
 </body>

@@ -10,7 +10,7 @@ How it works
   active tenant's state as JSON (/api/state). It reads the tenant's files on every change, never writes them.
 - The page keeps one open connection (/events). When any tenant file changes the server tells the page, the page
   refetches and redraws. When the tab is closed the connection drops and the server exits after a short grace period.
-- "Ask Claude" copies a ready-made message to the clipboard and brings the Claude app to the front.
+- "Ask Claude" brings the Claude app to the front (buttons that carry a request also copy it to the clipboard first).
 - Files are served only from inside the tenant folder, only a fixed set of file types, and the ask action needs a
   per-run token, so another web page cannot drive it.
 Env: JOBS_TENANT / JOBS_ROOT select the tenant (see tenant.py). DASH_IDLE_SECONDS (default 25) is the grace period.
@@ -232,9 +232,11 @@ SERVER = None
 
 
 def focus_claude(text):
-    """Copy text to the clipboard and bring the Claude app forward. Returns (focused, copied)."""
+    """Bring the Claude app forward; copy text to the clipboard first when there is any. Returns (focused, copied)."""
     copied = focused = False
     try:
+        if not text:
+            return focus_only(), False
         if sys.platform == "darwin":
             copied = subprocess.run(["pbcopy"], input=text.encode("utf-8"), timeout=5).returncode == 0
             focused = subprocess.run(["open", "-a", "Claude"], capture_output=True, timeout=10).returncode == 0
@@ -252,6 +254,17 @@ def focus_claude(text):
     except (OSError, subprocess.SubprocessError):
         pass
     return focused, copied
+
+
+def focus_only():
+    try:
+        if sys.platform == "darwin":
+            return subprocess.run(["open", "-a", "Claude"], capture_output=True, timeout=10).returncode == 0
+        if sys.platform.startswith("win"):
+            return subprocess.run(["cmd", "/c", "start", "", "claude:"], capture_output=True, timeout=10).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return False
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -316,8 +329,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self.send_json(400, {"error": "bad json"})
         if self.path == "/api/ask":
             text = str(body.get("text") or "").strip()[:4000]
-            if not text:
-                return self.send_json(400, {"error": "empty"})
             focused, copied = focus_claude(text)
             return self.send_json(200, {"ok": True, "copied": copied, "focused": focused})
         self.send_json(404, {"error": "not found"})

@@ -277,7 +277,7 @@ function vJobs(){
 function vRequirements(){
   const R = S.requirements, sum = S.requirementSummary, labels = Object.keys(S.requirementLabels).length ? S.requirementLabels : null;
   let h = header('Your requirements', 'The rules every role is measured against. Change them by telling Claude, below.',
-    '<button class="btn" type="button" data-fill="I want to change a requirement: ">Change a requirement</button>');
+    '<button class="btn" type="button" data-ask="I want to change a requirement.">Ask Claude to change this</button>');
   const keys = labels ? Object.keys(labels).filter(k => sum[k]) : Object.keys(sum);
   if (keys.length) h += '<dl class="glance">' + keys.map(k => `<div><dt>${esc(labels ? labels[k] : k)}</dt><dd>${esc(sum[k])}</dd></div>`).join('') + '</dl>';
   const checks = {};
@@ -311,7 +311,7 @@ function fileBox(path){
   return f && f.text != null ? `<div class="card">${md(f.text)}</div>` : '<div class="card empty">Loading</div>';
 }
 function vProfile(){
-  let h = header('About you', 'The facts Claude is allowed to use in resumes and answers. Nothing outside this list is ever claimed.', '<button class="btn" type="button" data-fill="Please update my profile: ">Update a fact</button>');
+  let h = header('About you', 'The facts Claude is allowed to use in resumes and answers. Nothing outside this list is ever claimed.', '<button class="btn" type="button" data-ask="Please update a fact in my profile.">Ask Claude to update this</button>');
   return h + (S.profile.trim() ? `<div class="card pad">${md(S.profile)}</div>` : '<div class="card empty"><b>No profile yet</b>Claude builds this during setup.</div>');
 }
 const VIEWS = {overview: vOverview, apps: vApps, jobs: vJobs, requirements: vRequirements, resumes: vResumes, profile: vProfile};
@@ -384,35 +384,22 @@ function renderDrawer(id){
   }
 }
 
-/* ---------- ask Claude ---------- */
-function ctxLabel(r){
-  const a = r.app && appById(r.app);
-  if (a) return {tag: a.id, label: `${a.company}, ${a.role}`};
-  const v = NAV.find(n => n[0] === r.view);
-  return {tag: '', label: v ? v[1] : ''};
-}
-function renderAsk(r){
-  const c = ctxLabel(r), a = r.app && appById(r.app);
-  $('#askCtx').innerHTML = c.tag ? `About <b>${esc(c.tag)}</b> ${esc(c.label)}` : `Looking at <b>${esc(c.label)}</b>`;
-  const chips = a ? [a.status === 'Shortlisted' ? 'Apply to this job' : '', 'Draft a follow-up for this', 'Change something about this application', 'Why did you decide this?'] :
-    ['Find new jobs', 'Check my replies', 'Change a requirement', 'What should I do next?'];
-  $('#askChips').innerHTML = chips.filter(Boolean).map(t => `<button class="chip" type="button" data-fill="${esc(t)}">${esc(t)}</button>`).join('');
-}
+/* ---------- ask Claude: bring the Claude app forward (a prepared message is copied only when a button carries one) ---------- */
 function toast(msg){
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 6000);
 }
 async function ask(text, ctxId){
-  const r = route(), a = (ctxId && appById(ctxId)) || (r.app && appById(r.app));
-  const who = S.tenant.id ? `, ${S.tenant.id}` : '';
-  const msg = `[From the job dashboard${who}${a ? `; about ${a.id}, ${a.company}, ${a.role}` : `; page: ${ctxLabel(r).label}`}] ${text}`;
+  const a = (ctxId && appById(ctxId)) || (route().app && appById(route().app));
+  const who = S && S.tenant.id ? `, ${S.tenant.id}` : '';
+  const msg = text ? `[From the job dashboard${who}${a ? `; about ${a.id}, ${a.company}, ${a.role}` : ''}] ${text}` : '';
   try {
     const res = await fetch('/api/ask', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Dashboard-Token': TOKEN}, body: JSON.stringify({text: msg})});
     const j = await res.json();
     if (!res.ok) throw new Error(j.error || 'failed');
-    toast(j.focused && j.copied ? 'Copied. Claude is open: press Cmd+V (Ctrl+V on Windows), then Enter.' : j.copied ? 'Copied. Switch to the Claude app, paste and press Enter.' : 'Could not reach Claude from here. Open the Claude app and type your request.');
-    $('#askText').value = '';
-  } catch (e){ toast('Could not send that. Open the Claude app and type your request.'); }
+    if (!j.focused) toast('Open the Claude app to continue.');
+    else if (msg) toast('Claude is open. Your request is copied: paste it with Cmd+V (Ctrl+V on Windows).');
+  } catch (e){ toast('Could not open Claude from here. Open the Claude app yourself.'); }
 }
 
 /* ---------- render loop ---------- */
@@ -433,7 +420,6 @@ function render(){
     if (id && $('#' + id)){ const e = $('#' + id); e.focus(); try { e.setSelectionRange(pos, pos); } catch (x) {} }
   }
   renderDrawer(r.app);
-  renderAsk(r);
   $('#brandName').textContent = S.tenant.name || 'Job search';
   document.title = (S.tenant.name ? S.tenant.name + ': ' : '') + 'Job search dashboard';
 }
@@ -473,7 +459,6 @@ document.addEventListener('click', e => {
   if ((n = t.closest('[data-set]'))){ const [k, ...v] = n.dataset.set.split('='); ui[k] = v.join('='); ui.jLimit = 100; render(); return; }
   if ((n = t.closest('[data-more]'))){ ui.jLimit += 100; render(); return; }
   if ((n = t.closest('[data-ask]'))){ ask(n.dataset.ask, n.dataset.ctx); return; }
-  if ((n = t.closest('[data-fill]'))){ const i = $('#askText'); i.value = n.dataset.fill; i.focus(); i.setSelectionRange(i.value.length, i.value.length); return; }
   if (t.closest('#theme')) cycleTheme();
 });
 document.addEventListener('keydown', e => {
@@ -482,12 +467,6 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.in; if (k){ ui[k] = e.target.value; ui.jLimit = 100; render(); } });
 document.addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.in; if (k && e.target.tagName === 'SELECT'){ ui[k] = e.target.value; ui.jLimit = 100; render(); } });
-$('#ask').addEventListener('submit', e => {
-  e.preventDefault();
-  const v = $('#askText').value.trim();
-  if (!v){ toast('Type what you would like Claude to do first.'); $('#askText').focus(); return; }
-  ask(v);
-});
 window.addEventListener('hashchange', render);
 
 /* ---------- theme ---------- */

@@ -61,7 +61,7 @@ nav a[aria-current="page"] .n{color:var(--accent-text)}
 .icon-btn:hover{color:var(--ink);border-color:var(--line2)}
 .icon-btn svg{width:16px;height:16px}
 .col{min-width:0}
-main{max-width:1240px;margin:0 auto;padding:26px 28px 150px;outline:0}
+main{max-width:1240px;margin:0 auto;padding:26px 28px 100px;outline:0}
 
 /* page header */
 .ph{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
@@ -208,7 +208,7 @@ tr.flash td{animation:flashbg 2.6s ease-out}
 .tabs button{border:0;background:transparent;padding:9px 12px;cursor:pointer;color:var(--ink2);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tabs button[aria-selected="true"]{color:var(--accent-text);border-bottom-color:var(--accent)}
 .tabs button:disabled{opacity:.4;cursor:default}
-.d-body{flex:1;overflow:auto;padding:18px 22px 130px}
+.d-body{flex:1;overflow:auto;padding:18px 22px 90px}
 .d-body iframe{width:100%;height:calc(100vh - 290px);min-height:420px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .sect{margin-bottom:22px}
 .kvs{display:grid;grid-template-columns:132px minmax(0,1fr);gap:7px 14px;margin:0}
@@ -266,19 +266,11 @@ tr.flash td{animation:flashbg 2.6s ease-out}
 .preview iframe{width:100%;height:calc(100vh - 150px);min-height:480px;border:1px solid var(--line);border-radius:var(--r);background:#fff}
 .preview .md{padding:16px 18px;max-height:calc(100vh - 150px);overflow:auto}
 
-/* ask bar */
-.ask{position:fixed;left:var(--side);right:0;bottom:0;z-index:50;padding:0 28px 16px;pointer-events:none}
-.ask-inner{pointer-events:auto;max-width:960px;margin:0 auto;background:var(--panel);border:1px solid var(--line2);border-radius:14px;box-shadow:var(--shadow-lg);padding:10px 12px 10px;display:flex;flex-direction:column;gap:8px}
-.ask-ctx{font-size:12px;color:var(--ink3);padding:0 4px;display:flex;gap:6px;align-items:center}
-.ask-ctx b{color:var(--ink2);font-weight:600}
-.ask-row{display:flex;gap:8px}
-.ask-row input{flex:1;min-width:0;border:1px solid var(--line2);background:var(--bg);border-radius:9px;padding:9px 12px;outline:0}
-.ask-row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-.ask .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--line);background:var(--panel2);border-radius:99px;padding:3px 11px;font-size:12.5px;cursor:pointer;color:var(--ink2)}
-.chip:hover{border-color:var(--accent);color:var(--accent-text)}
-body.has-drawer .ask{left:auto;right:0;width:min(720px,100vw);z-index:60;padding:0 22px 16px}
-#toast{position:fixed;left:50%;bottom:150px;transform:translate(-50%,10px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;box-shadow:var(--shadow-lg);z-index:80;opacity:0;pointer-events:none;transition:.2s;max-width:min(520px,92vw);text-align:center}
+/* ask Claude */
+.ask-fab{position:fixed;right:24px;bottom:22px;z-index:60;display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:0;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer;box-shadow:var(--shadow-lg)}
+.ask-fab:hover{filter:brightness(1.08)}
+.ask-fab::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.85}
+#toast{position:fixed;left:50%;bottom:84px;transform:translate(-50%,10px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;box-shadow:var(--shadow-lg);z-index:80;opacity:0;pointer-events:none;transition:.2s;max-width:min(520px,92vw);text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
 @media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g21,.g2{grid-template-columns:1fr}.res-layout{grid-template-columns:1fr}.preview{position:static}}
@@ -287,7 +279,7 @@ body.has-drawer .ask{left:auto;right:0;width:min(720px,100vw);z-index:60;padding
   .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-right:0;border-bottom:1px solid var(--line)}
   nav{flex-direction:row;flex-wrap:wrap}nav a .n{display:none}
   .side-foot{margin:0 0 0 auto}.brand small{display:none}
-  main{padding:18px 16px 160px}.ask{left:0;padding:0 12px 12px}
+  main{padding:18px 16px 100px}.ask-fab{right:14px;bottom:14px}
   .fun-row{grid-template-columns:100px minmax(0,1fr) 66px}.hbar{grid-template-columns:110px minmax(0,1fr) 30px}
   .tbl .hide-sm{display:none}
 }
