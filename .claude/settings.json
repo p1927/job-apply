@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 tools/*)",
+      "Bash(python tools/*)",
+      "Bash(JOBS_TENANT=* python3 tools/*)",
+      "Bash(bash tools/sync_career_ops.sh)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git pull*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Edit(tenants/**)",
+      "Write(tenants/**)",
+      "mcp__browseros-neo"
+    ],
+    "deny": [
+      "Bash(rm -rf*)",
+      "Bash(sudo*)"
+    ]
+  }
+}

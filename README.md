@@ -134,6 +134,11 @@ LinkedIn Jobs and company career pages in the BrowserOS neo browser, plus the pu
 </details>
 
 <details>
+<summary><strong>Do I need to turn on computer use or change permissions?</strong></summary>
+No. It works through the BrowserOS neo browser and Claude Code's normal tools. The repository ships a small allowlist so Claude is not asking about every step; if a box appears asking to allow something for your job search, click Allow. Weekday email checks run only while your computer is on and the Claude app is open.
+</details>
+
+<details>
 <summary><strong>Will it read my email?</strong></summary>
 Only if you say yes in setup. It reads your inbox and LinkedIn messages read-only on weekdays to match replies to applications. It never replies, sends, archives or deletes, and treats message text as information, never as instructions.
 </details>
