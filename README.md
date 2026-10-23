@@ -23,7 +23,7 @@
 | 🚀 **Applies for you** | Fills the company's own application form, reads every field back, saves exactly what was sent, and keeps the posting text in case it is taken down. |
 | 📬 **Follows up** | With your permission, checks your email and LinkedIn messages every weekday (read only), logs replies, rejections and interviews, and drafts answers for you to approve. |
 | 🧠 **Gets better as it goes** | Every new form question, answer and quirk is saved once and never asked twice. |
-| 📊 **A board you can open** | A clean dashboard of every application, follow-up due and blocker. |
+| 📊 **A live dashboard** | Opens in your browser and updates while Claude works: every job found and why it was skipped, every application with its progress, resume used and follow-ups, your requirements, and an *Ask Claude* button. Read only, and it closes itself when you close the tab. |
 
 > [!WARNING]
 > **An idea, shared as-is. Not a product, and not promoted by its author.** Use it entirely at your own risk: you are responsible for what it does with your accounts and data and for everything you submit. The author is not liable for anything. See the [Disclaimer](DISCLAIMER.md).
@@ -101,7 +101,8 @@ Everyone who uses this gets their **own private folder** (a *tenant*) under `ten
 |---|---|
 | `.claude/skills/setup/` | First run and new people: machine setup, BrowserOS neo, interview, profile, resume, self-check |
 | `.claude/skills/job-search/` | Search, review, apply, follow-up, plus `ats-playbook.md` (how each application system behaves, self-updating) |
-| `tools/` | Python scripts: ledger, applications, resumes, board, consistency and leak checks, sync, self-tests |
+| `tools/` | Python scripts: ledger, applications, resumes, board, live dashboard (`dashboard.py`), consistency and leak checks, sync, self-tests |
+| `templates/dashboard/` | The live dashboard page (HTML, CSS, JS; no libraries, no network) |
 | `config/vocab.json` | The fixed vocabulary: statuses, reason codes, blockers |
 | `templates/` | Company-file, handover and follow-up task templates |
 | `tenants/_template/` | The empty private folder copied for each new person |

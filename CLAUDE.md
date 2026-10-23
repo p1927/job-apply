@@ -28,6 +28,7 @@ Engine (shared, no personal data):
 | Inbox and follow-up routine | `.claude/skills/job-search/follow-up.md` |
 | Building and choosing a resume | `docs/RESUME-GUIDE.md` |
 | Status words, reason codes, blockers, CSV header (tenant may override categories and tracks) | `config/vocab.json` and `<tenant>/data/vocab.overrides.json` |
+| Live dashboard (what it shows, how to open it, the Ask Claude bar) | `.claude/skills/job-search/SKILL.md` section 10, code in `tools/dashboard.py` and `templates/dashboard/` |
 | Company file and handover templates | `templates/applications/` |
 | career-ops relationship | `docs/CAREER-OPS.md` |
 

@@ -1,6 +1,6 @@
 ---
 name: job-search
-description: Find, vet, rank and apply to jobs for the active person (tenant) using their own requirements, ledger and resume. Use for any job search, shortlist, resume tailoring, ledger, board, follow-up or application task, so nobody has to repeat their requirements. If no person is set up yet, use the setup skill first.
+description: Find, vet, rank and apply to jobs for the active person (tenant) using their own requirements, ledger and resume. Use for any job search, shortlist, resume tailoring, ledger, board, dashboard, follow-up or application task, so nobody has to repeat their requirements. If no person is set up yet, use the setup skill first.
 ---
 
 # Job search procedure
@@ -21,6 +21,7 @@ Engine docs: `docs/RESUME-GUIDE.md` (resumes), `.claude/skills/job-search/ats-pl
 2. `python3 tools/check_consistency.py`. Fix every error before doing anything else.
 3. Read `data/search-queue.json` and resume at the first entry that is not done.
 4. Blockers: list ledger rows with a `blocker` set and applications waiting on the human. Ask for those first (section 5), then continue with other work.
+5. Open the live dashboard for the person (section 10) unless it is already open, so they can watch the work.
 
 ## 2. Search
 - Sources (use all that the tenant has): LinkedIn Jobs in BrowserOS neo; company career pages and boards (Greenhouse, Ashby, Lever) for known companies, and LinkedIn Jobs, both in BrowserOS neo, the way a person searches (filters, scrolling, paging). Firecrawl does not index LinkedIn; use it for career pages and pay research. `tools/search_boards.py` (uses `data/boards.json`) and career-ops portal scanning are optional cross-checks, never a replacement.
@@ -75,3 +76,9 @@ Inbox and message routine is `follow-up.md` in this folder. Record rejections, i
 1. `python3 tools/check_consistency.py` (must pass).
 2. `python3 tools/build_board.py`.
 3. `python3 tools/sync.py` (commits and pushes the engine on the maintainer's machine and the tenant repo wherever it has one). Fix any failure yourself and report in one or two sentences.
+
+## 10. The live dashboard
+The person watches and browses their search in a read-only page that follows the files while you work. Start it with `python3 tools/dashboard.py` using `run_in_background`; with `JOBS_TENANT=<id>` in front when more than one person uses the checkout. It opens in their default browser, reuses a copy that is already running, and stops by itself about half a minute after the tab is closed. Say "I opened your dashboard" in one sentence; never explain the mechanics. Use it when they say "show the board", "dashboard", "what is happening", or at session start.
+- It shows: overview and follow-ups, applications (board and list, each with its progress, requirement checks, company file, saved posting and the resume used), every job seen with the reason it was skipped, requirements, resumes and the profile. It reads `data/`, `applications/`, `REQUIREMENTS.md`, `candidate-profile.md`, `resume*` and `tenant.json`, so keep those files current (record applications and outcomes with the tools) and the page stays right without any extra step.
+- The "Ask Claude" bar at the bottom copies a message to the clipboard and brings the Claude app forward; the person pastes it. Such a message starts with `[From the job dashboard, <tenant id>; about APP-0NN ...]`. Treat it as a normal request from the person for that tenant, run `python3 tools/tenant.py use <id>` or `JOBS_TENANT` accordingly, and apply the usual rules (the "Ask Claude to apply" button changes nothing about the approval mode and the requirements check).
+- The page is served only on `127.0.0.1`, serves only files inside the tenant folder, and never writes. If it fails to start, fix it yourself (`python3 tools/dashboard.py --no-open` prints the error) and report in one sentence. `python3 tools/build_board.py` still builds the static `board/index.html` and the ledger markdown for sharing.

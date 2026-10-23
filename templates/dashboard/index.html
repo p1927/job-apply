@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Search Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Cpath d='M9 21l5-5 3 3 6-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/ui/style.css">
+</head>
+<body data-token="__DASH_TOKEN__">
+<div class="shell">
+  <aside class="side" aria-label="Sections">
+    <div class="brand"><span class="logo" aria-hidden="true"></span><div><b id="brandName">Job search</b><small id="brandSub">Live dashboard</small></div></div>
+    <nav id="nav"></nav>
+    <div class="side-foot">
+      <div class="live" id="live" role="status" aria-live="polite"><i></i><span>Connecting</span></div>
+      <button class="icon-btn" id="theme" type="button" title="Switch theme" aria-label="Switch theme"></button>
+    </div>
+  </aside>
+  <div class="col">
+    <main id="main" tabindex="-1"></main>
+  </div>
+</div>
+
+<div id="scrim" hidden></div>
+<aside id="drawer" class="drawer" aria-label="Application details" hidden></aside>
+
+<form class="ask" id="ask" autocomplete="off">
+  <div class="ask-inner">
+    <div class="ask-ctx" id="askCtx"></div>
+    <div class="ask-row">
+      <input id="askText" type="text" placeholder="Want a change? Tell Claude, for example: raise my minimum pay to 90k" aria-label="Message for Claude" maxlength="1000">
+      <button class="btn primary" type="submit" id="askBtn">Ask Claude</button>
+    </div>
+    <div class="chips" id="askChips"></div>
+  </div>
+</form>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="/ui/app.js"></script>
+</body>
+</html>

@@ -397,10 +397,72 @@ def test_sync(root):
     shutil.rmtree(base, ignore_errors=True)
 
 
+def test_dashboard(root):
+    import http.client, time, urllib.request
+    wr(root, "applications/APP-001-posting.md", "# Posting\n\nAs published.\n")
+    env = {**os.environ, "JOBS_ROOT": root, "JOBS_TODAY": "2026-10-23", "DASH_IDLE_SECONDS": "2", "DASH_PORT": "0"}
+    proc = subprocess.Popen([sys.executable, os.path.join(TOOLS, "dashboard.py"), "--no-open"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env, cwd=root)
+    try:
+        line = proc.stdout.readline()
+        url = line.split("dashboard:")[-1].strip()
+        check("dashboard: starts and prints its address", url.startswith("http://127.0.0.1:"), line)
+        port = int(url.rsplit(":", 1)[1])
+
+        def get(path, headers=None):
+            req = urllib.request.Request(url + path, headers=headers or {})
+            try:
+                with urllib.request.urlopen(req, timeout=5) as r:
+                    return r.status, r.read().decode("utf-8", "replace")
+            except urllib.error.HTTPError as e:
+                return e.code, ""
+        code, body = get("/api/state")
+        st = json.loads(body) if code == 200 else {}
+        check("dashboard: state shows the tenant, ledger and requirements", code == 200 and st["tenant"]["name"] == "Jane Doe" and len(st["ledger"]) >= 3
+              and st["requirementSummary"].get("pay") == "fixture pay" and "sections" in st["requirements"], body[:200])
+        code, page = get("/")
+        check("dashboard: page served with a per-run token and no external fonts", code == 200 and "__DASH_TOKEN__" not in page and "fonts.g" not in page)
+        check("dashboard: tenant files are served", get("/api/file?path=applications/APP-001.md")[0] == 200)
+        check("dashboard: path traversal and secrets are refused", get("/api/file?path=../../../README.md")[0] == 404 and get("/api/file?path=.dashboard.json")[0] == 404
+              and get("/api/file?path=/etc/passwd")[0] == 404)
+        check("dashboard: foreign Host header is refused", get("/api/state", {"Host": "evil.example"})[0] == 403)
+        req = urllib.request.Request(url + "/api/ask", data=b'{"text":"x"}', method="POST", headers={"Content-Type": "application/json"})
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            ask_code = 200
+        except urllib.error.HTTPError as e:
+            ask_code = e.code
+        check("dashboard: ask action needs the token", ask_code == 403)
+        # live change: open the event stream, edit a file, expect a change event; then close it and expect the server to exit
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=8)
+        conn.request("GET", "/events")
+        resp = conn.getresponse()
+        resp.fp.readline()
+        time.sleep(0.2)
+        wr(root, "applications/APP-001.md", "# APP-001 : Alpha : AI Engineer\n\n- Status: Applied\n")
+        got = False
+        end = time.time() + 6
+        while time.time() < end and not got:
+            ln = resp.fp.readline().decode()
+            got = "event: change" in ln
+        check("dashboard: a changed file produces a live change event", got)
+        resp.close()
+        conn.close()
+        try:
+            proc.wait(timeout=15)
+            gone = True
+        except subprocess.TimeoutExpired:
+            gone = False
+        check("dashboard: server exits by itself once the page is closed", gone)
+        check("dashboard: lock file is cleaned up", not os.path.exists(os.path.join(root, "board/.dashboard.json")))
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+
+
 def main():
     root = make_copy()
     print("testing on copy:", root)
-    for fn in (test_ledger, test_company_file, test_record, test_resumes, test_board, test_tenant, test_sync):
+    for fn in (test_ledger, test_company_file, test_record, test_resumes, test_board, test_dashboard, test_tenant, test_sync):
         try:
             fn(root)
         except Exception as e:  # a crashing test is a failure, keep going
