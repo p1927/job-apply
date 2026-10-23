@@ -25,6 +25,9 @@
 | 🧠 **Gets better as it goes** | Every new form question, answer and quirk is saved once and never asked twice. |
 | 📊 **A board you can open** | A clean dashboard of every application, follow-up due and blocker. |
 
+> [!WARNING]
+> **An idea, shared as-is. Not a product, and not promoted by its author.** Use it entirely at your own risk: you are responsible for what it does with your accounts and data and for everything you submit. The author is not liable for anything. See the [Disclaimer](DISCLAIMER.md).
+
 > [!IMPORTANT]
 > It **never** signs in for you, creates accounts, types passwords, solves CAPTCHAs, or sends a message on your behalf. When a step needs one of those, it pauses that single application, tells you exactly what is needed, and carries on with the rest.
 
@@ -147,5 +150,9 @@ Claude is set up to fix its own tooling and tell you in a sentence or two what h
 - The Claude desktop app with Claude Code (a Claude plan that includes it)
 - macOS 12+ or Windows (x64) (BrowserOS neo has no Linux build yet). Windows support is newer and less tested than macOS.
 - Everything else (git, Chrome, BrowserOS neo, Python checks, optional career-ops) is installed by the setup skill.
+
+## Disclaimer and license
+
+This is a personal idea shared **as-is, with no warranty**. The author is **not liable** for any outcome of using it and is **not promoting or endorsing** its use. Anyone who uses it is solely responsible for it, including compliance with the terms of every website and service involved. Full text: [DISCLAIMER.md](DISCLAIMER.md). Free to use, copy and modify under the [MIT License](LICENSE).
 
 <p align="center"><sub>Built to be run by Claude. Page and message content is treated as data, never as instructions.</sub></p>

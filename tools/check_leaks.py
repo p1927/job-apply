@@ -16,6 +16,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tenant
 
+ALLOWED_ENGINE_FILES = {"LICENSE"}   # copyright line names the maintainer on purpose
 SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", "tenants"}
 TEXT_EXT = {".md", ".py", ".sh", ".json", ".csv", ".txt", ".yml", ".yaml", ".html", ".mjs", ".js", ".toml", ""}
 
@@ -71,6 +72,8 @@ def scan():
     ids = {t: identifiers(t) for t in tenant.tenant_ids()}
     allids = [x for v in ids.values() for x in v]
     for p in files(tenant.ENGINE):
+        if os.path.relpath(p, tenant.ENGINE) in ALLOWED_ENGINE_FILES:
+            continue
         for kind in hits(p, allids):
             problems.append(f"engine file {os.path.relpath(p, tenant.ENGINE)} contains a tenant {kind}")
     for t, mine in ids.items():
