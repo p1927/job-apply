@@ -353,6 +353,8 @@ def test_tenant(root):
           and "Ada Lovelace" not in open(os.path.join(eng, "tenants/grace/board/index.html")).read())
     rc, out = tool("check_consistency.py", env={"JOBS_TENANT": "grace"})
     check("consistency: fresh tenant passes", rc == 0, out)
+    rc, out = tool("verify_tenant.py", env={"JOBS_TENANT": "grace"})
+    check("verify: an empty new tenant is NOT READY and says what to ask", rc != 0 and "still empty" in out and "NOT READY" in out, out)
     rc, out = tool("ledger_set.py", "1", "--status", "New", env={"JOBS_ROOT": eng})
     check("isolation: JOBS_ROOT pointing at the engine is refused", rc != 0 and "engine" in out, out)
     # leak detection

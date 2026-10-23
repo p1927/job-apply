@@ -23,7 +23,7 @@ Engine docs: `docs/RESUME-GUIDE.md` (resumes), `.claude/skills/job-search/ats-pl
 4. Blockers: list ledger rows with a `blocker` set and applications waiting on the human. Ask for those first (section 5), then continue with other work.
 
 ## 2. Search
-- Discovery: company career pages and boards (Greenhouse, Ashby, Lever) for known companies, and LinkedIn Jobs, both in BrowserOS neo, the way a person searches (filters, scrolling, paging). Firecrawl does not index LinkedIn; use it for career pages and pay research. `tools/search_boards.py` (uses `data/boards.json`) and career-ops portal scanning are optional cross-checks, never a replacement.
+- Sources (use all that the tenant has): LinkedIn Jobs in BrowserOS neo; company career pages and boards (Greenhouse, Ashby, Lever) for known companies, and LinkedIn Jobs, both in BrowserOS neo, the way a person searches (filters, scrolling, paging). Firecrawl does not index LinkedIn; use it for career pages and pay research. `tools/search_boards.py` (uses `data/boards.json`) and career-ops portal scanning are optional cross-checks, never a replacement.
 - Categories are the ones in the vocabulary (`python3 -c "import sys;sys.path.insert(0,'tools');import tenant;print(tenant.load_vocab()['categories'])"`). Every row gets exactly one. A search is not done until every category has been run; report empty ones with what you ran.
 - Work through `data/search-queue.json`: each entry is one query x one page with a status (`pending`, `done`, `rate-limited`). Set it to in-progress when you start and done when its cards are all decided. Any agent can resume from it.
 - Pace requests 2 to 3 seconds apart. At the first HTTP 429, stop, mark that queue entry `rate-limited`, and move to other work.

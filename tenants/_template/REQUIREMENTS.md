@@ -45,6 +45,11 @@ Last updated: (date).
 - Stretch roles are fine. If a posting asks for something not yet done, keep the role and note it as "to learn".
 - Never claim a skill that is not in `candidate-profile.md`.
 
+## Follow-up (inbox checks)
+- Consent (set by setup; the candidate chooses): `yes` = Claude may read the candidate's email and LinkedIn messages, read only, on weekdays, log replies, rejections and interviews to the ledger and draft replies for approval; `no` = only when asked. Current: (not set)
+- Channels allowed: (not set)
+- Claude never sends, replies, archives or deletes anything.
+
 ## Fixed facts
 Work authorization, notice period, languages and standard answers live in `applicant-details.md`.
 
