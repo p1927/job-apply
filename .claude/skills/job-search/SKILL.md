@@ -43,13 +43,14 @@ Engine docs: `docs/RESUME-GUIDE.md` (resumes), `.claude/skills/job-search/ats-pl
 1. Apply on the company's own site, not LinkedIn Easy Apply, when both exist.
 2. Choose the resume per `docs/RESUME-GUIDE.md`; build it if that role type has none yet (`tools/make_resumes.py`).
 3. `python3 tools/new_company_file.py APP-0NN`, then paste the posting text into the posting file BEFORE applying. Postings get taken down.
-4. Fill the form using `ats-playbook.md` and `applicant-details.md`. Read every field back before submitting. Never leave a section blank without saying so in the report.
+4. Fill the form using `ats-playbook.md` and `applicant-details.md`. For every question not plainly in the standard answers, run `python3 tools/find_answer.py <several wordings>` first (it searches profile, details, learned answers, requirements and every earlier application's submitted answers). Read every field back before submitting. Never leave a section blank without saying so in the report.
 5. Submit under the approval mode in `REQUIREMENTS.md`.
 6. `python3 tools/record_application.py APP-0NN answers.json` (fills the company file, data, board, commit).
 7. `python3 tools/ledger_set.py` to set the ledger row `Applied` with its `app_id`.
 
 ## 5. Human in the loop
 - The cases and what to do are the "Ask the human" table in `REQUIREMENTS.md`. Never guess those facts, never sign in, never solve a CAPTCHA.
+- Before any `fact` or `other` stop: (1) run `tools/find_answer.py` with at least three wordings; (2) answer from stored facts when they settle the question, even if the form words it differently ("permanent right to work" is settled by "Permanent resident of Sweden"); an earlier application that answered the same question counts. Ask only when the stored facts conflict with each other or say nothing. (3) When you do ask, say what you searched and give the exact question with its options.
 - On a stop: set the ledger `blocker` (captcha, account, upload, fact, other), put the exact question or step in the company file under Open questions, tell the person once, and continue other work.
 - On their reply: resume that one application. Save any new fact with `python3 tools/learn_answer.py` so they are never asked twice. Clear the blocker.
 

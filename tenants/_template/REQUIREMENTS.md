@@ -71,7 +71,7 @@ Ask only for the triggers below. Everything else is decided by the rules.
 | Visible CAPTCHA | Pause only that application. Set the ledger blocker `captcha` (values in the vocabulary in `config/vocab.json`). Message the candidate with the page link and one line. Continue other work. Resume on their reply. |
 | Login or account needed (Workday, SuccessFactors; try "Apply on company website" first) | Same, blocker `account`. The candidate creates the account; the agent never does. |
 | Upload the tool cannot do (LinkedIn Easy Apply file input) | Same, blocker `upload`, and give the prepared PDF path. |
-| Legal or personal fact not in `applicant-details.md` | Same, blocker `fact`. Batch such questions in one message. |
+| Legal or personal fact that no stored file settles (after the lookup in the skill, section 5) | Same, blocker `fact`. Batch such questions in one message. |
 | New form question with no stored answer that is not safe to default | Same, blocker `fact` or `other`. |
 
 On their reply: resume that application and save the answer with `python3 tools/learn_answer.py` so it is never asked again.
