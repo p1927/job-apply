@@ -459,10 +459,22 @@ def test_dashboard(root):
             proc.kill()
 
 
+def test_coverage(root):
+    """coverage.py: id match, company+title match (company-site ids), missing items added as New."""
+    ledger_set = lambda *a: run(root, "ledger_set.py", *a)
+    ledger_set("9991001", "--add", "--company", "Wolt (DoorDash)", "--title", "Senior Software Engineer", "--status", "Applied", "--app-id", "APP-900")
+    wr(root, "scratch-items.tsv", "9991001\tWolt\tSenior Software Engineer\tStockholm\n9991002\tWolt\tSenior Software Engineer\tStockholm\n9991003\tNewCo AB\tFrontend Engineer\tStockholm\n")
+    rc, out = run(root, "coverage.py", os.path.join(root, "scratch-items.tsv"))
+    check("coverage: id and company+title matches count as covered", rc == 0 and "covered 2  missing 1" in out and "NewCo" in out, out)
+    rc, out = run(root, "coverage.py", os.path.join(root, "scratch-items.tsv"), "--add", "--category", "Other")
+    r = [x for x in ledger(root) if x["job_id"] == "9991003"]
+    check("coverage: --add creates a New row for a missing item", rc == 0 and r and r[0]["status"] == "New", out)
+
+
 def main():
     root = make_copy()
     print("testing on copy:", root)
-    for fn in (test_ledger, test_company_file, test_record, test_resumes, test_board, test_dashboard, test_tenant, test_sync):
+    for fn in (test_ledger, test_company_file, test_record, test_resumes, test_board, test_dashboard, test_tenant, test_sync, test_coverage):
         try:
             fn(root)
         except Exception as e:  # a crashing test is a failure, keep going
