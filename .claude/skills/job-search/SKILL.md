@@ -17,6 +17,7 @@ Read before working (tenant files):
 Engine docs: `docs/RESUME-GUIDE.md` (resumes), `.claude/skills/job-search/ats-playbook.md` plus the tenant's `ats-quirks.md` if present (form mechanics), `config/vocab.json` plus `data/vocab.overrides.json` (the only allowed statuses, reason codes, blockers and categories).
 
 ## 1. Session start
+0. Browser first. Run `python3 tools/setup_machine.py --fix` (opens BrowserOS neo if closed and checks its MCP port). If `mcp__browseros-neo__*` tools are not in this conversation, stop and follow Step 1.4 of the setup skill (new conversation) before searching or applying. Fallbacks that work without it and need no sign-in: Firecrawl (postings, pay research) and the Playwright plugin for company career pages and ATS forms (Teamtailor, Greenhouse, Lever, Ashby). Never use them for LinkedIn or anything behind a login.
 1. `python3 tools/sync.py --pull` (updates the engine and the tenant repo; harmless if offline).
 2. `python3 tools/check_consistency.py`. Fix every error before doing anything else.
 3. Read `data/search-queue.json` and resume at the first entry that is not done.
@@ -36,7 +37,7 @@ Engine docs: `docs/RESUME-GUIDE.md` (resumes), `.claude/skills/job-search/ats-pl
 3. For each card in order: click it, read the detail pane in one call, decide against `REQUIREMENTS.md`, record the status at once, then take the next card. Do not reload between cards.
 4. Every `Not-relevant` row needs a reason code from the vocabulary and a short note. A row without a reason is unfinished.
 5. A `Relevant` role is applied (section 4) before the next page is reviewed. If it is blocked, set the blocker and go on.
-6. Missing office days or pay does not block (ambiguity rule). Note it for the company file.
+6. Missing office days or pay does not block (ambiguity rule). Note it for the company file. A form that states the office days settles it: the application form is part of the posting (Aira's Teamtailor form asked "4 days in the office"; the ad said only "hybrid"). Read the form's screening questions before filling anything, and drop the role when they hit a stated hard fail.
 7. Next page: step `start` by 25 until a page is short or repeats.
 
 ## 4. Apply

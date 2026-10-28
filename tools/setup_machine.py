@@ -93,6 +93,28 @@ def mcp_registered():
         return False
 
 
+def registered_url():
+    try:
+        with open(os.path.expanduser("~/.claude.json"), encoding="utf-8") as f:
+            return json.load(f).get("mcpServers", {}).get(MCP_NAME, {}).get("url", "")
+    except (OSError, ValueError):
+        return ""
+
+
+def start_browseros(wait=40):
+    """Open BrowserOS neo and wait until its MCP server answers. Returns the live URL or ''."""
+    import time
+    if SYSTEM == "Darwin":
+        run(["open", "-a", "BrowserOS neo"])
+    end = time.time() + wait
+    while time.time() < end:
+        url = live_endpoint()
+        if url:
+            return url
+        time.sleep(2)
+    return ""
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--fix", action="store_true")
@@ -113,6 +135,16 @@ def main():
     say(bo, "BrowserOS neo")
     reg = mcp_registered()
     say(reg, f"{MCP_NAME} registered in Claude Code")
+    live = live_endpoint() if bo else ""
+    if bo and not live and fix:
+        live = start_browseros()
+    say(bool(live), "BrowserOS neo running and answering MCP", live)
+    if live and reg and registered_url() and registered_url() != live:
+        if fix and shutil.which("claude"):
+            run(["claude", "mcp", "remove", "--scope", "user", MCP_NAME])
+            FIXES.append(("MCP link repointed to " + live, run(["claude", "mcp", "add", "--transport", "http", "--scope", "user", MCP_NAME, live])))
+        else:
+            say(False, f"registered URL {registered_url()} differs from live {live}", "run with --fix")
     co = os.path.isfile(os.path.join(CAREER_OPS_DIR, "package.json"))
     say(co, "career-ops clone", CAREER_OPS_DIR, optional=True)
     co_deps = co and os.path.isdir(os.path.join(CAREER_OPS_DIR, "node_modules"))

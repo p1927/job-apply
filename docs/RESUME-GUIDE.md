@@ -43,6 +43,7 @@ Pick the variant by role type. Each variant (a config in the tenant's `resume-co
 | --- | --- |
 | The primary target role | The candidate's strongest real project of exactly that type |
 | A neighbouring role (for example platform or full-stack versus applied AI) | The work that matches the posting's top requirements, in the posting's order |
+| A front-end or full-stack role | The front-end work first (configuration suite, SIM platform front end), then the React parts of the AI projects; skills list starts with Front end. Build it from a copy of an existing front-end config |
 | A stretch role | The honest closest evidence; never an invented claim. Say plainly what is applied versus research |
 
 - Name the file `<Full_Name>_<Company>_Resume.pdf`. One tailored PDF per role type may be reused across companies.

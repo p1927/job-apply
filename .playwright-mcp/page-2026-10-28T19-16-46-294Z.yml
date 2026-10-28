@@ -1,0 +1,164 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - status [ref=e7]
+  - dialog "This website uses cookies to ensure you get the best experience." [ref=e8]:
+    - generic [ref=e9]:
+      - heading "This website uses cookies to ensure you get the best experience." [level=2] [ref=e10]
+      - paragraph [ref=e11]: Aira and our selected partners use cookies and similar technologies (together “cookies”) that are necessary to present this website, and to ensure you get the best experience of it. If you consent to it, we will also use cookies for analytics and marketing purposes.
+      - paragraph [ref=e12]:
+        - text: See our
+        - link "Cookie Policy" [active] [ref=e13] [cursor=pointer]:
+          - /url: https://career.airahome.com/cookie-policy
+        - text: to read more about the cookies we set.
+      - paragraph [ref=e14]: You can withdraw and manage your consent at any time, by clicking “Manage cookies” at the bottom of each website page.
+    - generic [ref=e15]:
+      - button "Accept all cookies" [ref=e16] [cursor=pointer]
+      - button "Decline all non-necessary cookies" [ref=e17] [cursor=pointer]
+      - button "Cookie preferences" [ref=e18] [cursor=pointer]
+  - banner [ref=e19]:
+    - link "Job ad" [ref=e21] [cursor=pointer]:
+      - /url: https://career.airahome.com/jobs/7791505-frontend-developer-planning
+    - link [ref=e26] [cursor=pointer]:
+      - /url: https://career.airahome.com/
+      - img "Aira career site" [ref=e27]
+    - button "Share page" [ref=e31] [cursor=pointer]
+  - main [ref=e35]:
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - text: Product & Technology · Stockholm HQ ·
+        - generic [ref=e40]: Hybrid
+      - heading "Frontend Developer – Planning" [level=1] [ref=e43]
+      - heading "Change. It's in the air." [level=2] [ref=e44]
+    - generic [ref=e50]:
+      - group "How many years of relevant work experience with product-driven development do you have?" [ref=e53]:
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - radio "Less than 2 years" [ref=e59]
+            - generic [ref=e60] [cursor=pointer]: Less than 2 years
+          - generic [ref=e61]:
+            - radio "Between 2 and 4 years" [ref=e62]
+            - generic [ref=e63] [cursor=pointer]: Between 2 and 4 years
+          - generic [ref=e64]:
+            - radio "Between 4 and 6 years" [ref=e65]
+            - generic [ref=e66] [cursor=pointer]: Between 4 and 6 years
+          - generic [ref=e67]:
+            - radio "More than 7 years" [ref=e68]
+            - generic [ref=e69] [cursor=pointer]: More than 7 years
+      - group "Do you have experience with React & Typescript? Required" [ref=e72]:
+        - generic [ref=e74]:
+          - text: Do you have experience with React & Typescript?
+          - superscript [aria-hidden] [ref=e75]: "*"
+          - generic [ref=e76]: Required
+        - generic [ref=e77]:
+          - generic [ref=e78]:
+            - radio "Yes" [ref=e79]
+            - generic [ref=e80] [cursor=pointer]: "Yes"
+          - generic [ref=e81]:
+            - radio "No" [ref=e82]
+            - generic [ref=e83] [cursor=pointer]: "No"
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - text: Please share the link to your LinkedIn profile or portfolio.
+          - superscript [aria-hidden] [ref=e88]: "*"
+          - generic [ref=e89]: Required
+        - textbox "Please share the link to your LinkedIn profile or portfolio. Required" [ref=e90]
+      - group "What is your current legal status regarding your eligibility to work in Sweden? Required" [ref=e93]:
+        - generic [ref=e95]:
+          - text: What is your current legal status regarding your eligibility to work in Sweden?
+          - superscript [aria-hidden] [ref=e96]: "*"
+          - generic [ref=e97]: Required
+        - generic [ref=e99]:
+          - generic [ref=e100]:
+            - radio "EU citizenship" [ref=e101]
+            - generic [ref=e102] [cursor=pointer]: EU citizenship
+          - generic [ref=e103]:
+            - radio "Permanent residency permit" [ref=e104]
+            - generic [ref=e105] [cursor=pointer]: Permanent residency permit
+          - generic [ref=e106]:
+            - radio "Temporary residency permit" [ref=e107]
+            - generic [ref=e108] [cursor=pointer]: Temporary residency permit
+          - generic [ref=e109]:
+            - radio "I do not have a residency permit" [ref=e110]
+            - generic [ref=e111] [cursor=pointer]: I do not have a residency permit
+          - generic [ref=e112]:
+            - radio "Other" [ref=e113]
+            - generic [ref=e114] [cursor=pointer]: Other
+      - group "We offer a semi-hybrid set-up that requires you to be in the office 4 days per week. Does this arrangement align with your preferences and workstyle? Required Our office is located on Norra Stationsgatan 93 in Stockholm (Sankt Eriksplan and Odenplan are the closest subway stations)." [ref=e117]:
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - text: We offer a semi-hybrid set-up that requires you to be in the office 4 days per week. Does this arrangement align with your preferences and workstyle?
+            - superscript [aria-hidden] [ref=e120]: "*"
+            - generic [ref=e121]: Required
+          - generic [ref=e122]: Our office is located on Norra Stationsgatan 93 in Stockholm (Sankt Eriksplan and Odenplan are the closest subway stations).
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - radio "Yes" [ref=e125]
+            - generic [ref=e126] [cursor=pointer]: "Yes"
+          - generic [ref=e127]:
+            - radio "No" [ref=e128]
+            - generic [ref=e129] [cursor=pointer]: "No"
+      - heading "Personal information" [level=2] [ref=e131]
+      - generic [ref=e133]:
+        - generic [ref=e134]:
+          - generic [ref=e135]:
+            - text: First name
+            - superscript [aria-hidden] [ref=e136]: "*"
+            - generic [ref=e137]: Required
+          - textbox "First name Required" [ref=e138]
+        - generic [ref=e139]:
+          - generic [ref=e140]:
+            - text: Last name
+            - superscript [aria-hidden] [ref=e141]: "*"
+            - generic [ref=e142]: Required
+          - textbox "Last name Required" [ref=e143]
+      - generic [ref=e144]:
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - text: Email
+            - superscript [aria-hidden] [ref=e147]: "*"
+            - generic [ref=e148]: Required
+          - textbox "Email Required" [ref=e149]
+        - generic [ref=e150]:
+          - generic [ref=e151]:
+            - text: Phone
+            - superscript [aria-hidden] [ref=e152]: "*"
+            - generic [ref=e153]: Required
+          - generic [ref=e154]:
+            - button "Change country, selected Sweden (+46)" [ref=e156] [cursor=pointer]
+            - textbox "Phone number with country code" [ref=e160]:
+              - /placeholder: +46 70 123 45 67
+      - generic [ref=e162]:
+        - generic [ref=e163]:
+          - text: Upload CV
+          - superscript [aria-hidden] [ref=e164]: "*"
+          - generic [ref=e165]: Required
+        - generic [ref=e166] [cursor=pointer]:
+          - generic [ref=e167]: Drop your file or upload
+          - button "Drop your file or upload, Upload CV" [ref=e171]
+      - generic [ref=e173]:
+        - generic [ref=e174]: Additional files
+        - generic [ref=e175] [cursor=pointer]:
+          - generic [ref=e176]: Drop your file or upload
+          - button "Drop your file or upload, Additional files" [ref=e180]
+      - generic [ref=e181]:
+        - generic [ref=e182]: Cover letter
+        - textbox "Cover letter" [ref=e183]
+      - generic [ref=e186]:
+        - generic [ref=e189]:
+          - checkbox "Required. By submitting this application, I agree that I have read the Privacy Policy and confirm that Aira store my personal details to be able to process my job application." [ref=e190] [cursor=pointer]
+          - generic [ref=e191] [cursor=pointer]:
+            - generic [ref=e192]: Required.
+            - paragraph [ref=e193]:
+              - text: By submitting this application, I agree that I have read the
+              - link "Privacy Policy" [ref=e194]:
+                - /url: https://career.airahome.com/privacy-policy
+              - text: and confirm that Aira store my personal details to be able to process my job application.
+            - superscript [aria-hidden] [ref=e195]: "*"
+        - generic [ref=e198]:
+          - checkbox "Yes, Aira can contact me directly about specific future job opportunities." [ref=e199] [cursor=pointer]
+          - paragraph [ref=e201] [cursor=pointer]: Yes, Aira can contact me directly about specific future job opportunities.
+        - button "Submit application" [ref=e202] [cursor=pointer]
+  - complementary "Career site by Teamtailor" [ref=e203]:
+    - link "Career site by Teamtailor" [ref=e204] [cursor=pointer]:
+      - /url: https://www.teamtailor.com/?utm_campaign=poweredby&utm_content=career.airahome.com&utm_medium=referral&utm_source=career-site
