@@ -47,6 +47,12 @@ def sync(label, path, msg, push):
     if git(path, "remote").stdout.strip() == "":
         return f"{label}: {', '.join(out) or 'clean'}, no remote configured"
     branch = git(path, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    url = git(path, "remote", "get-url", "origin").stdout.strip()
+    repo = url.rsplit("/", 1)[-1].removesuffix(".git") or label
+    label = f"{label} (repo {repo})"
+    if branch == "gitbutler/workspace":
+        return (f"{label}: {', '.join(out) or 'clean'}; this checkout is a GitButler workspace, so a plain pull/push does not apply. "
+                f"The remote {url} exists. Push with: but push (see memory note gitbutler-instead-of-worktrees)")
     pull = git(path, "pull", "--rebase", "--autostash", "-q")
     if pull.returncode != 0:
         git(path, "rebase", "--abort")
