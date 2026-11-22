@@ -32,6 +32,14 @@ then `python3 tools/build_board.py`, then `python3 tools/check_consistency.py`, 
 ## Learn from it
 Rejection or reply lessons: company file Learnings; general rules per "Saving what you learn" in `CLAUDE.md`.
 
+## Learn from outcomes
+After each rejection or 30 days of silence (ghost):
+- Run the analysis: per row, company, role, stage, date, stated reason (unreliable), your hypothesis of the real reason, evidence from the posting and the resume sent.
+- Update the tenant's `data/rejection-analysis.md` (table, counts by hypothesis, interviews per application by track and company type).
+- Feed patterns back: `REQUIREMENTS.md` (roles to stop), ranking, resume variant choice, learning items kept separate from claims.
+- Claims only from `candidate-profile.md`; suggestions to learn skills stay in the learning list.
+- Gmail reading tip: use `evaluate_in_page` on `tr.zA` rows, not full snapshots.
+
 ## Day-7 and day-14 checks
 For each app with status Applied whose `followUp.nextCheck` is due and no reply found:
 - Day 7: log `info` ("no reply at day 7"), which moves nextCheck out a week. List it as going quiet.
