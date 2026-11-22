@@ -1,7 +1,17 @@
 # Job application system: owner rules
 
 ## HARD RULE: Claude owns this system
-Claude is the sole owner, manager and maintainer of the whole job-application system: this engine repo and the optional `../career-ops` checkout. The people who use it are not technical and must never be asked to handle dependencies, installs, configs, errors, merges or tooling. Claude installs, fixes, wires up and verifies everything itself, and only brings the person decisions that are truly theirs: legal facts only they know, passwords, CAPTCHAs, account creation. When something breaks, fix it, then report the result in one or two plain sentences. The goal is that the person says "find jobs" or "apply" and it just works.
+Claude is the sole owner, manager and maintainer of the whole job-application system: this engine repo and the optional `../career-ops` checkout.
+- The people who use it are not technical and must never be asked to handle dependencies, installs, configs, errors, merges or tooling.
+- Claude installs, fixes, wires up and verifies everything itself, and only brings the person decisions that are truly theirs: legal facts only they know, passwords, CAPTCHAs, 2FA and verification codes.
+- When something breaks, fix it, then report the result in two or three bullets of at most 10 words.
+- The goal is that the person says "find jobs" or "apply" and it just works.
+
+## Non-negotiables
+1. Truth. Only facts in the tenant's `candidate-profile.md` go into a resume or an answer. Never invent a metric, tool, title or year.
+2. Accounts and secrets. Owner decision 2026-11-22: agents may sign in and create accounts through Google sign-in or the browser session the person is already signed in to (BrowserOS neo). Passwords, CAPTCHAs, bot checks and 2FA or verification codes stay with the person: stop at that field, take them to the exact screen (`request_human_help`), wait, then continue. Gmail is read for replies only, never to fetch codes. Ask-the-human table: tenant `REQUIREMENTS.md`.
+3. Submit only roles that pass the tenant's `REQUIREMENTS.md`, and only inside a batch the person approved (approval policy: tenant `REQUIREMENTS.md`; plan-first steps: `docs/AGENT-BRIEF.md`). Anything that fails a rule is not applied to.
+4. One tenant per run. Never copy facts, answers, ledger rows or files from one tenant to another.
 
 ## Who is this for? Tenants
 This repo is an engine shared by several people. Each person is a tenant: a private folder `tenants/<id>/` with their own profile, rules, ledger, applications and board. `python3 tools/tenant.py show` prints who is active. Tools only ever read and write inside the active tenant; **tenant data never mixes** (tests and `tools/check_leaks.py` enforce it).
@@ -9,12 +19,6 @@ This repo is an engine shared by several people. Each person is a tenant: a priv
 - The engine holds no personal data. Never write a person's details into an engine file.
 - The active person is stored in `tenants/.active`, shared by every session on this checkout. When more than one person uses a checkout, or a scheduled task runs, put `JOBS_TENANT=<id>` in front of tool commands so a session never switches under another.
 - Check who you are working for before any job-search action. If a session mixes people, switch with `python3 tools/tenant.py use <id>` and say so.
-
-## Non-negotiables
-1. Truth. Only facts in the tenant's `candidate-profile.md` go into a resume or an answer. Never invent a metric, tool, title or year.
-2. No accounts, passwords or CAPTCHAs. Never sign in, create an account, type a password or solve a CAPTCHA. Pause that one application and ask (see "Ask the human" in the tenant's `REQUIREMENTS.md`).
-3. Submit only roles that pass the tenant's `REQUIREMENTS.md`, under the approval mode recorded there. Anything that fails a rule is not applied to.
-4. One tenant per run. Never copy facts, answers, ledger rows or files from one tenant to another.
 
 ## Doc map: each topic has one owning file
 Engine (shared, no personal data):
@@ -29,9 +33,11 @@ Engine (shared, no personal data):
 | Building and choosing a resume | `docs/RESUME-GUIDE.md` |
 | Status words, reason codes, blockers, CSV header (tenant may override categories and tracks) | `config/vocab.json` and `<tenant>/data/vocab.overrides.json` |
 | Live dashboard (what it shows, how to open it, the Ask Claude bar) | `.claude/skills/job-search/SKILL.md` section 10, code in `tools/dashboard.py` and `templates/dashboard/` |
-| Company file and handover templates | `templates/applications/` |
-| Rules every agent and subagent follows (look up, store, ask one question) | `docs/AGENT-BRIEF.md` |
+| Company file, handover and follow-up task templates | `templates/` |
+| Rules every agent and subagent follows (look up, store, ask one question, approval, verify, backlog) | `docs/AGENT-BRIEF.md` |
+| Platform accounts (cost to join and to apply, status, follow-up) | `.claude/skills/job-search/SKILL.md` section 7a; data in `<tenant>/data/platform-accounts.md` |
 | career-ops relationship | `docs/CAREER-OPS.md` |
+| Upstream research (background only, not rules) | `docs/UPSTREAM-SURVEY.md` |
 
 Tenant (`tenants/<id>/`, private):
 | Topic | Owner |
@@ -44,12 +50,16 @@ Tenant (`tenants/<id>/`, private):
 | Every job seen and its status/reason/blocker | `data/seen-jobs.csv` (the ledger) |
 | Every application | `data/applications.json`, `applications/APP-###.md` |
 | Search position, company boards | `data/search-queue.json`, `data/boards.json` |
+| Built resume | `resume.md`, `resume.pdf` (generated from `resume-content.json`) |
+| Optional per-tenant ATS quirks (non-maintainer machines) | `ats-quirks.md` |
+| Weekday inbox task | `tenant.json` followup.task_id; routine in `follow-up.md` |
 | Generated views | `board/index.html`, `applications-ledger.md` |
+| Backlog (gaps, bugs, risks: evidence, impact, acceptance, claim by owner and date) | `<tenant>/data/backlog-*.md` files (one per theme; no other backlog system) |
 
-## Self-improving rule
+## Saving what you learn
 Any new answer, fact or form behaviour the human gives is saved in its owning file in the same turn:
 - Form answers: `python3 tools/learn_answer.py` into the tenant's "Learned answers" table.
-- Facts about the person: the tenant's `candidate-profile.md`.
+- Facts about the person: `python3 tools/learn_answer.py ... --kind fact` (lands in `applicant-details.md` "Learned answers"); if the fact changes what may be claimed on a resume or answer, also edit `candidate-profile.md` the same turn.
 - Rules: the tenant's `REQUIREMENTS.md`.
 - ATS quirks (contain no personal data): `python3 tools/learn_answer.py --kind quirk` into the engine's `ats-playbook.md`.
 - Rejections and interviews found in email: `python3 tools/log_outcome.py`.
@@ -61,11 +71,7 @@ Never restate a rule in a second file; point to the owner. Each application keep
 
 Start with `.claude/skills/job-search/SKILL.md` for the workflow, or `.claude/skills/setup/SKILL.md` when there is no tenant.
 
-## Learned rules (self-improve writes here; repo-specific)
-- Check platform cost before building any profile (2026-11-22): cost to join, cost to apply, vetting. Upwork needs Connects, Contra needs Pro to apply; we built profiles there before checking. Prefer free-to-apply routes. Record every account in the tenant's `data/platform-accounts.md`; no passwords.
+## Learned rules (one line each, no restating)
+- Agent and subagent behaviour (look up first, store answers, one question at a time, plan before applying, bullets of at most 10 words, verify, backlog, never leave work local): `docs/AGENT-BRIEF.md`.
+- Platform profiles: cost first (`.claude/skills/job-search/SKILL.md` section 7a).
 - Name repos exactly in reports: `job-apply` (this engine) and `job-applications` (the person's private data). Verify `git remote -v` before saying a remote is missing.
-- Answer the owner in bullets of at most 10 words; give a recommendation; state the plan before outward actions.
-- Never leave work local: commit, merge to main and push in the same turn; never ask whether to merge.
-- Plan before applying (2026-11-22): before any application batch, tell the owner in short bullets which jobs, which profile/resume headline and which platform, then wait for his yes. Reading and research need no approval.
-- Never ask what can be looked up (2026-11-22): salary, rates, pay floors and facts are in `REQUIREMENTS.md`, `candidate-profile.md`, `applicant-details.md` (run `tools/find_answer.py`), and market pay comes from a web search. Ask only what nobody can find. I asked for a salary figure that was already stored (USD 100,000/yr floor).
-- Core knowledge rule (2026-11-22): the owner's answers are stored in the tenant repo the same turn (`tools/learn_answer.py`) and looked up before any question; see `docs/AGENT-BRIEF.md`. Repeating a question he already answered is a process failure.

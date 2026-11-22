@@ -58,7 +58,7 @@ Work authorization, notice period, languages and standard answers live in `appli
 - Stated hard fails still stop an application: anything listed as a hard fail in the sections above (for example office days, location, required language, clearance, pay clearly below minimum, no way to employ the candidate where they live).
 
 ## Approval policy
-- Submit approval (set by setup; the candidate chooses): `standing` = submit any role that passes the rules on this page and report afterwards; `each` = ask before every submit. Current: (not set)
+- Submit approval (set by setup; the candidate chooses): `standing` = one yes to a batch plan (jobs, resume headline, platform) covers every passing job in that batch, then report; `each` = one yes per application. Either way the plan is shown before each batch. Current: (not set)
 - Each application still gets a company file in `applications/` and a ledger entry.
 - No email or message to a recruiter or anyone else is sent without the candidate's approval. Replies to inbound mail are drafted only.
 - Optional consent boxes stay unticked; required consents are ticked and logged. Details in `applicant-details.md` and the ats-playbook.
@@ -69,9 +69,9 @@ Ask only for the triggers below. Everything else is decided by the rules.
 | Trigger | Agent action |
 | --- | --- |
 | Visible CAPTCHA | Pause only that application. Set the ledger blocker `captcha` (values in the vocabulary in `config/vocab.json`). Message the candidate with the page link and one line. Continue other work. Resume on their reply. |
-| Login or account needed (Workday, SuccessFactors; try "Apply on company website" first) | Same, blocker `account`. The candidate creates the account; the agent never does. |
+| Login or account needed (Workday, SuccessFactors; try "Apply on company website" first) | Same, blocker `account`. The agent may sign in or create it through Google sign-in or the signed-in browser; the candidate does the password, 2FA, CAPTCHA and terms. |
 | Upload the tool cannot do (LinkedIn Easy Apply file input) | Same, blocker `upload`, and give the prepared PDF path. |
-| Legal or personal fact that no stored file settles (after the lookup in the skill, section 5) | Same, blocker `fact`. Batch such questions in one message. |
+| Legal or personal fact that no stored file settles (after the lookup in the skill, section 5) | Same, blocker `fact`. Ask one question per message, in bullets of at most 10 words (docs/AGENT-BRIEF.md). |
 | New form question with no stored answer that is not safe to default | Same, blocker `fact` or `other`. |
 
 On their reply: resume that application and save the answer with `python3 tools/learn_answer.py` so it is never asked again.
