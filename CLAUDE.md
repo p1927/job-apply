@@ -30,6 +30,7 @@ Engine (shared, no personal data):
 | Status words, reason codes, blockers, CSV header (tenant may override categories and tracks) | `config/vocab.json` and `<tenant>/data/vocab.overrides.json` |
 | Live dashboard (what it shows, how to open it, the Ask Claude bar) | `.claude/skills/job-search/SKILL.md` section 10, code in `tools/dashboard.py` and `templates/dashboard/` |
 | Company file and handover templates | `templates/applications/` |
+| Rules every agent and subagent follows (look up, store, ask one question) | `docs/AGENT-BRIEF.md` |
 | career-ops relationship | `docs/CAREER-OPS.md` |
 
 Tenant (`tenants/<id>/`, private):
@@ -67,3 +68,4 @@ Start with `.claude/skills/job-search/SKILL.md` for the workflow, or `.claude/sk
 - Never leave work local: commit, merge to main and push in the same turn; never ask whether to merge.
 - Plan before applying (2026-11-22): before any application batch, tell the owner in short bullets which jobs, which profile/resume headline and which platform, then wait for his yes. Reading and research need no approval.
 - Never ask what can be looked up (2026-11-22): salary, rates, pay floors and facts are in `REQUIREMENTS.md`, `candidate-profile.md`, `applicant-details.md` (run `tools/find_answer.py`), and market pay comes from a web search. Ask only what nobody can find. I asked for a salary figure that was already stored (USD 100,000/yr floor).
+- Core knowledge rule (2026-11-22): the owner's answers are stored in the tenant repo the same turn (`tools/learn_answer.py`) and looked up before any question; see `docs/AGENT-BRIEF.md`. Repeating a question he already answered is a process failure.

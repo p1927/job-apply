@@ -8,6 +8,8 @@ description: Find, vet, rank and apply to jobs for the active person (tenant) us
 Procedure only. Rules live elsewhere, one owner each. All file names below are inside the **active tenant folder** unless they start with `tools/`, `config/`, `docs/` or `.claude/` (engine).
 
 ## 0. Who is this for?
+Every agent and subagent reads `docs/AGENT-BRIEF.md` first (look up, store, ask one question at a time).
+
 Run `python3 tools/tenant.py show`. If it says there is no tenant, stop and use the `setup` skill. Say which person you are working for in your first message. Never carry facts, answers or ledger rows over from another tenant.
 
 Read before working (tenant files):
