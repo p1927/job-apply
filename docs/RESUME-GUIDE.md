@@ -42,11 +42,13 @@ The step-by-step skill is `.claude/skills/resume-writing/SKILL.md` (sound human,
 
 ## Build and check
 ```bash
-python3 tools/make_resumes.py            # every config in the tenant's resume-content.json
+python3 tools/make_resumes.py            # every config not yet tied to a sent application (sent PDFs are skipped, never overwritten)
 python3 tools/make_resumes.py <config>   # one config from resume-content.json
 python3 tools/make_resumes.py --new APP-052 --key acme --company Acme --headline "..." --summary "..." --record   # a new tailored variant
 ```
 After building, extract the text from each PDF and confirm it reads in order, is two pages or fewer, and contains no em dashes or filler words.
+
+Learning 2026-11-22: a bulk rebuild once overwrote about 48 resumes that had already been sent. A sent resume is a record: never rebuild it in bulk; change a style or wording only for new applications, and name the config if a rebuild is really wanted.
 
 ## Choosing a resume
 Pick the variant by role type. Each variant (a config in the tenant's `resume-content.json`) reorders the same true bullets.

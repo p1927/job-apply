@@ -4,7 +4,7 @@
 Content comes from the tenant file resume-content.json; only facts from candidate-profile.md belong there. Tailoring changes the headline, the summary,
 the order of skills and the order of bullets. It never adds a claim.
 
-Usage: python3 tools/make_resumes.py                 # build every stored config
+Usage: python3 tools/make_resumes.py                 # build every stored config that is not already tied to a sent application
        python3 tools/make_resumes.py spotify         # build one stored config
        python3 tools/make_resumes.py spotify --out applications/APP-006/Jane_Doe_Spotify_Resume
        python3 tools/make_resumes.py --new APP-052 --key acme --company Acme --headline "AI Engineer | RAG" --summary "..."
@@ -312,7 +312,11 @@ def main():
         new_config(a.new, a.key, a.company, a.headline, a.summary)
         names = [a.key]
     if a.out and len(names) != 1: sys.exit("error: --out needs exactly one config name")
+    bulk = not names
     for n in names or list(CONFIGS):
+        if bulk and CONFIGS.get(n, {}).get("out", "").startswith("applications/") and os.path.exists(os.path.join(ROOT, CONFIGS[n]["out"] + ".pdf")):
+            print(f"skipped {n}: its PDF was already sent with an application; name the config to rebuild it on purpose")
+            continue        # a bulk run must never overwrite the exact resume that was submitted
         if n not in CONFIGS: sys.exit(f"error: unknown config '{n}'. Known: {', '.join(CONFIGS)}")
         out = build(n, a.out, pdf=not a.no_pdf)
         if a.new and not a.no_pdf: record_resume(a.new, out)   # --record is still accepted; recording is the default for --new
