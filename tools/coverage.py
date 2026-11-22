@@ -18,12 +18,12 @@ import argparse, csv, json, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tenant
 import ledger_set as L
+import datalock
 
 
 def norm(s):
-    s = (s or "").lower()
-    s = re.sub(r"\b(ab|inc|ltd|gmbh|group|the|nordic|sweden|sverige)\b", " ", s)
-    return re.sub(r"[^a-z0-9]+", " ", s).strip()
+    """Company/title key: the shared datalock.norm, after dropping legal suffixes and country words."""
+    return datalock.norm(re.sub(r"\b(ab|inc|ltd|gmbh|group|the|nordic|sweden|sverige)\b", " ", (s or "").lower()))
 
 
 def ledger_rows():
@@ -42,7 +42,7 @@ def same(a, b):
 
 
 def check(items, rows):
-    ids = {r["job_id"] for r in rows if r.get("status") != "New" or True}
+    ids = {r["job_id"] for r in rows}
     keys = [key(r["company"], r["title"]) for r in rows]
     covered, missing = [], []
     for it in items:
@@ -103,18 +103,22 @@ def main():
         jid = it.get("linkedin_job_id") or it.get("job_id") or ""
         print(f"  MISSING {jid} | {it.get('company')} | {it.get('title')} | {it.get('location')}")
     if a.add:
-        import subprocess
-        for it in missing:
-            jid = str(it.get("linkedin_job_id") or it.get("job_id") or "")
-            if not jid:
-                print("  skip (no id):", it.get("company"), it.get("title"))
-                continue
-            cmd = [sys.executable, os.path.join(L.TOOLS_DIR, "ledger_set.py"), jid, "--add", "--company", it.get("company") or "?",
-                   "--title", it.get("title") or "?", "--location", it.get("location") or "", "--category", a.category,
-                   "--source", it.get("source_vocab") or a.source, "--status", "New"]
-            r = subprocess.run(cmd, capture_output=True, text=True)
-            print("  added" if r.returncode == 0 else "  FAILED " + r.stderr.strip()[-120:], jid)
-
+        vocab = L.load_vocab()
+        with L.locked():       # one read, one write, one lock for the whole batch
+            ledger = L.read_ledger(vocab)
+            for it in missing:
+                jid = str(it.get("linkedin_job_id") or it.get("job_id") or "")
+                if not jid:
+                    print("  skip (no id):", it.get("company"), it.get("title"))
+                    continue
+                try:
+                    L.apply_update(vocab, ledger, jid, add={"company": it.get("company") or "?", "title": it.get("title") or "?",
+                                                            "location": it.get("location") or "", "category": a.category},
+                                   status="New", source=it.get("source") or it.get("source_vocab") or a.source)
+                    print("  added", jid)
+                except SystemExit as e:
+                    print("  FAILED", jid, str(e)[-120:])
+            L.save_ledger(ledger, vocab)
 
 if __name__ == "__main__":
     main()

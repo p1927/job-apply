@@ -85,13 +85,27 @@ def inside(p, base=None):
 
 
 def load_vocab(tenant_root=None):
-    """Engine vocabulary merged with the tenant's data/vocab.overrides.json (tenant keys replace engine keys)."""
+    """Engine vocabulary merged with the tenant's data/vocab.overrides.json.
+    Lists are MERGED (engine values stay valid, tenant values are appended), dicts are merged key by key, other values
+    replace. A key written "!name" replaces the engine list outright (use only when engine values must stop being valid);
+    "+name" is accepted as a synonym for the default merge."""
     with open(engine_path("config", "vocab.json"), encoding="utf-8") as f:
         v = json.load(f)
     p = os.path.join(tenant_root or root(), "data", "vocab.overrides.json")
     if os.path.isfile(p):
         with open(p, encoding="utf-8") as f:
-            v.update(json.load(f))
+            ov = json.load(f)
+        for k, val in ov.items():
+            if k.startswith("!"):
+                v[k[1:]] = val
+                continue
+            k = k.lstrip("+")
+            if isinstance(val, list) and isinstance(v.get(k), list):
+                v[k] = v[k] + [x for x in val if x not in v[k]]
+            elif isinstance(val, dict) and isinstance(v.get(k), dict):
+                v[k] = {**v[k], **val}
+            else:
+                v[k] = val
     return v
 
 

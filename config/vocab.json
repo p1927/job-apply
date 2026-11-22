@@ -25,6 +25,11 @@
   "duplicate",
   "already-applied",
   "posting-gone",
+  "freelance-not-fit",
+  "rate-too-low",
+  "too-junior",
+  "visa",
+  "duplicate-company",
   "other"
  ],
  "ledger_blockers": [
@@ -78,6 +83,10 @@
   "linkedin",
   "company",
   "board",
-  "recruiter"
+  "recruiter",
+  "freelance",
+  "referral",
+  "email",
+  "other"
  ]
 }

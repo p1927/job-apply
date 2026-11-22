@@ -12,61 +12,72 @@ then a per-category count and the list of boards that did not respond.
 Slugs that return nothing are reported as DEAD. Keep the slug lists current.
 """
 import json
+import os
 import re
 import sys
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-sys.path.insert(0, __import__("os").path.dirname(__import__("os").path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tenant
 
 # The boards, location patterns and title pattern are the tenant's own: <tenant>/data/boards.json
 #   {"boards": {"<category>": [["gh|ash|lev", "<slug>"], ...]}, "location": {"<category>": "<regex>"}, "title_regex": "<regex>"}
 # gh = Greenhouse, ash = Ashby, lev = Lever.
-_CFG = {}
-try:
-    with open(__import__("os").path.join(tenant.root(), "data", "boards.json"), encoding="utf-8") as _f:
-        _CFG = json.load(_f)
-except (OSError, ValueError):
-    sys.exit("error: <tenant>/data/boards.json is missing or invalid. Ask Claude to build it from your categories and target companies.")
-BOARDS = {k: [tuple(x) for x in v] for k, v in _CFG.get("boards", {}).items()}
-LOCATION = _CFG.get("location", {})
-TITLE = re.compile(_CFG.get("title_regex") or r"\b(AI|ML|LLM|Engineer)\b", re.I)
+BOARDS, LOCATION, TITLE = {}, {}, re.compile(r"\b(AI|ML|LLM|Engineer)\b", re.I)
+
+
+def load_config():
+    """Read the tenant's boards.json (done in main, so --help works for a tenant that has none yet)."""
+    global BOARDS, LOCATION, TITLE
+    try:
+        with open(os.path.join(tenant.root(), "data", "boards.json"), encoding="utf-8") as f:
+            cfg = json.load(f)
+    except (OSError, ValueError):
+        sys.exit("error: <tenant>/data/boards.json is missing or invalid. Ask Claude to build it from your categories and target companies.")
+    BOARDS = {k: [tuple(x) for x in v] for k, v in cfg.get("boards", {}).items()}
+    LOCATION = cfg.get("location", {})
+    TITLE = re.compile(cfg.get("title_regex") or r"\b(AI|ML|LLM|Engineer)\b", re.I)
 
 
 def get(url):
+    """Return (json, None) or (None, reason): the reason says HTTP code or error, so a 429 does not look like a dead slug."""
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=20) as r:
-            return json.loads(r.read())
-    except Exception:
-        return None
+            return json.loads(r.read()), None
+    except urllib.error.HTTPError as e:
+        return None, f"HTTP {e.code}"
+    except Exception as e:  # noqa: BLE001
+        return None, type(e).__name__
 
 
 def fetch(provider, slug):
-    """Return a list of (title, location, id, url), or None if the board does not respond."""
+    """Return (list of (title, location, id, url), None), or (None, reason) if the board does not respond."""
     if provider == "gh":
-        d = get(f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs")
+        d, why = get(f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs")
         if d is None:
-            return None
-        return [(j["title"], j["location"]["name"], str(j["id"]), j.get("absolute_url", ""))
-                for j in d.get("jobs", [])]
+            return None, why
+        return [(j["title"], (j.get("location") or {}).get("name", ""), str(j["id"]), j.get("absolute_url", ""))
+                for j in d.get("jobs", [])], None
     if provider == "ash":
-        d = get(f"https://api.ashbyhq.com/posting-api/job-board/{slug}")
+        d, why = get(f"https://api.ashbyhq.com/posting-api/job-board/{slug}")
         if d is None:
-            return None
+            return None, why
         return [(j["title"], (j.get("location") or "") + (" [remote]" if j.get("isRemote") else ""),
-                 j["id"], j.get("jobUrl", "")) for j in d.get("jobs", [])]
+                 j["id"], j.get("jobUrl", "")) for j in d.get("jobs", [])], None
     if provider == "lev":
-        d = get(f"https://api.lever.co/v0/postings/{slug}?mode=json")
+        d, why = get(f"https://api.lever.co/v0/postings/{slug}?mode=json")
         if not isinstance(d, list):
-            return None
+            return None, why or "unexpected response"
         return [(j["text"], (j.get("categories") or {}).get("location", ""), j["id"], j.get("hostedUrl", ""))
-                for j in d]
-    return None
+                for j in d], None
+    return None, "unknown provider " + str(provider)
 
 
 def main(argv):
+    load_config()
     wanted = argv[1:] or list(BOARDS)
     unknown = [c for c in wanted if c not in BOARDS]
     if unknown:
@@ -74,11 +85,11 @@ def main(argv):
     pairs = sorted({pair for c in wanted for pair in BOARDS[c]})
     with ThreadPoolExecutor(8) as ex:
         results = dict(zip(pairs, ex.map(lambda p: fetch(*p), pairs)))
-    dead = [f"{p}:{s}" for (p, s), items in results.items() if items is None]
+    dead = [f"{p}:{s} ({results[(p, s)][1]})" for (p, s) in pairs if results[(p, s)][0] is None]
     for cat in wanted:
         hits = []
         for provider, slug in BOARDS[cat]:
-            items = results.get((provider, slug))
+            items = results.get((provider, slug), (None, None))[0]
             if not items:
                 continue
             for title, loc, jid, url in items:
