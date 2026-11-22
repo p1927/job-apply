@@ -101,12 +101,35 @@ Everyone who uses this gets their **own private folder** (a *tenant*) under `ten
 |---|---|
 | `.claude/skills/setup/` | First run and new people: machine setup, BrowserOS neo, interview, profile, resume, self-check |
 | `.claude/skills/job-search/` | Search, review, apply, follow-up, plus `ats-playbook.md` (how each application system behaves, self-updating) |
-| `tools/` | Python scripts: ledger, applications, resumes, board, live dashboard (`dashboard.py`), consistency and leak checks, sync, self-tests |
+| `tools/` | Python scripts, one line each (full list below) |
 | `templates/dashboard/` | The live dashboard page (HTML, CSS, JS; no libraries, no network) |
 | `config/vocab.json` | The fixed vocabulary: statuses, reason codes, blockers |
 | `templates/` | Company-file, handover and follow-up task templates |
 | `tenants/_template/` | The empty private folder copied for each new person |
 | `docs/` | Resume guide and the optional [career-ops](https://github.com/p1927/career-ops) integration |
+
+**Tools** (all in `tools/`; each prints its usage with `--help`; they work on the active person and never touch another):
+
+| Tool | What it does |
+|---|---|
+| `start.py` | One call at "find jobs": who is active, what waits for review, what is blocked, follow-ups due, the next step |
+| `ledger_set.py` | Set or add one row of the ledger `data/seen-jobs.csv`, validated by the vocabulary |
+| `new_app.py` | Allocate the next APP id and add the application (locked, safe with parallel agents; never pick ids by hand) |
+| `record_application.py` | Record a submitted application: app, company file, ledger, board, commit |
+| `new_company_file.py` | Create the posting file and the company-file sections for an application |
+| `make_resumes.py` | Build tailored resume markdown and PDF, and record the PDF path on the app |
+| `search_boards.py` | Search Greenhouse, Ashby and Lever boards for roles |
+| `linkedin_harvest.js` | Harvest the job cards of one LinkedIn results page (paste into a BrowserOS neo `run`) |
+| `coverage.py` | Check that every job seen is in the ledger (`--add` adds the missing ones), queue and ledger reports |
+| `seed_queue.py` | Add LinkedIn search pages to the search queue |
+| `find_answer.py`, `learn_answer.py` | Look up a stored form answer, or save a new answer, fact or ATS quirk |
+| `log_outcome.py` | Log a rejection, interview or follow-up found in email |
+| `build_board.py`, `dashboard.py` | Build the static board, or run the live dashboard |
+| `sync.py` | Save and push: commits only intended files, merge only, `--status` shows what would be saved |
+| `datalock.py` | Shared helper: the data lock, atomic file writes and name matching (imported by the tools, not run) |
+| `check_consistency.py`, `check_leaks.py`, `verify_tenant.py` | Validate the data, check that tenants never mix, confirm a new setup is complete |
+| `tenant.py`, `setup_machine.py`, `sync_career_ops.sh` | Choose or create the person, set up the machine, update the optional career-ops checkout |
+| `test_tools.py` | The self-test (synthetic person, temp folders; no real data is touched) |
 
 Each person's folder holds `REQUIREMENTS.md` (the rules), `candidate-profile.md` (the facts), `applicant-details.md` (form answers), `resume-content.json`, the **ledger** `data/seen-jobs.csv`, `data/applications.json`, `applications/` (one file per application) and the generated `board/index.html`.
 
@@ -115,7 +138,7 @@ Each person's folder holds `REQUIREMENTS.md` (the rules), `candidate-profile.md`
 <details>
 <summary><strong>Quality checks</strong></summary>
 
-- `python3 tools/test_tools.py`: 60+ automated checks on a synthetic person, including tenant isolation and leak detection.
+- `python3 tools/test_tools.py`: 100+ automated checks on a synthetic person, including tenant isolation and leak detection.
 - `python3 tools/verify_tenant.py`: confirms a new person's setup is complete before the first real run.
 - `python3 tools/check_consistency.py`: validates the ledger, applications and files at the start of every session.
 

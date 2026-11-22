@@ -9,3 +9,4 @@ __pycache__/
 .DS_Store
 .lock
 .playwright-mcp/
+.claude/worktrees/

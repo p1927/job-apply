@@ -411,10 +411,10 @@ def test_sync(root):
     msg = sync.sync("data", work, "Test sync", True)
     check("sync: clean repo reports nothing new", "pushed" not in msg and "up to date" in msg or "nothing" in msg, msg)
     plain = os.path.join(base, "plain"); os.makedirs(plain)
-    wr(work, ".tmp-x.part", "half"); wr(work, "data/.lock", ""); wr(work, "data/keep.txt", "k")
+    wr(work, ".tmp-x.part", "half"); wr(work, "data/.lock", ""); wr(work, "data/keep.txt", "k"); wr(work, ".claude/worktrees/w1/f.txt", "w")
     msg = sync.sync("data", work, "Stage test", True)
     files = git(work, "show", "--name-only", "--format=", "HEAD")
-    check("sync: temp files and the lock file are never staged", "data/keep.txt" in files and ".tmp-x.part" not in files and ".lock" not in files, files)
+    check("sync: temp files and the lock file are never staged", "data/keep.txt" in files and ".tmp-x.part" not in files and ".lock" not in files and "worktrees" not in files, files)
     wr(work, "data/more.txt", "m")
     st = sync.status("data", work)
     check("sync: --status counts changes and changes nothing", "1 files changed" in st and "data/more.txt" not in git(work, "log", "--name-only", "--format=").replace("data/keep.txt", ""), st)
@@ -534,10 +534,84 @@ def test_coverage(root):
     check("coverage: --add creates a New row for a missing item", rc == 0 and r and r[0]["status"] == "New", out)
 
 
+def test_misc(_root):
+    """Vocabulary merge, consistency checks, README tool table, record creates a ledger row, start.py, search_boards, harvest syntax."""
+    sys.path.insert(0, TOOLS)
+    import tenant
+    r = make_copy()
+    try:
+        # vocab: engine values stay valid, tenant values are appended, "!key" replaces
+        wr(r, "data/vocab.overrides.json", json.dumps({"categories": ["SE-local"], "source_values": ["upwork"], "!tracks": ["only"]}))
+        v = tenant.load_vocab(r)
+        check("vocab: tenant list merges with the engine list", v["categories"][:3] == ["Local", "Remote", "Other"] and "SE-local" in v["categories"]
+              and "linkedin" in v["source_values"] and "upwork" in v["source_values"])
+        check("vocab: '!key' replaces the engine list", v["tracks"] == ["only"])
+        check("vocab: freelance is a valid source and has reason codes", "freelance" in v["source_values"] and "freelance-not-fit" in v["ledger_reason_codes"])
+        os.unlink(os.path.join(r, "data/vocab.overrides.json"))
+        # record creates the ledger row when none exists, defaults the date, and records the resume
+        add_test_app(r)
+        rc, out = run(r, "new_company_file.py", "APP-900", "--stub")
+        wr(r, "applications/APP-900/cv.pdf", "pdf")
+        wr(r, "a.json", json.dumps({"via": "Form", "confirmation": "Thanks", "resume": "applications/APP-900/cv.pdf"}))
+        rc, out = run(r, "record_application.py", "APP-900", "a.json")
+        rows = list(csv.DictReader(rd(r, "data/seen-jobs.csv").splitlines()))
+        row = next((x for x in rows if x["app_id"] == "APP-900"), None)
+        app = next(a for a in json.loads(rd(r, "data/applications.json"))["apps"] if a["id"] == "APP-900")
+        check("record: missing ledger row is created as Applied", rc == 0 and row is not None and row["status"] == "Applied" and row["job_id"] == "9990001", out)
+        check("record: missing date means today, resume path stored", app["dateApplied"] != "" and app["resume"] == "applications/APP-900/cv.pdf", out)
+        # consistency: duplicate ids, leftover temp files, ignore file
+        d = json.loads(rd(r, "data/applications.json"))
+        d["apps"].append(dict(d["apps"][-1]))
+        wr(r, "data/applications.json", json.dumps(d, indent=1) + "\n")
+        rc, out = run(r, "check_consistency.py")
+        check("consistency: duplicate app id is an error", rc != 0 and "duplicate id APP-900" in out, out)
+        d["apps"].pop()
+        wr(r, "data/applications.json", json.dumps(d, indent=1) + "\n")
+        wr(r, "data/.tmp-x.part", "x")
+        rc, out = run(r, "check_consistency.py")
+        check("consistency: leftover temp file is a warning", "leftover temp file" in out, out)
+        c = rd(r, "applications/APP-900.md").replace("- Confirmation:", "- Confirm:")
+        wr(r, "applications/APP-900.md", c)
+        rc, out = run(r, "check_consistency.py")
+        wr(r, "data/consistency-ignore.json", json.dumps({"no_confirmation": ["APP-900"]}))
+        rc2, out2 = run(r, "check_consistency.py")
+        check("consistency: no hard-coded app id; tenant ignore file downgrades to a warning",
+              "WARN applications/APP-900.md: no '- Confirmation:'" in out2 and "ERROR applications/APP-900.md: no '- Confirmation:'" in out, out + out2)
+        rc, out = run(r, "start.py", "--no-check")
+        check("start: prints tenant, ledger counts and a Next line", rc == 0 and "- tenant:" in out and "- Next:" in out, out)
+        # coverage --add: one locked batch
+        wr(r, "items.tsv", "5550001\tNewCo\tAI Engineer\tX\n5550002\tNewCo2\tML Engineer\tY\n")
+        rc, out = run(r, "coverage.py", "items.tsv", "--add")
+        ids = {x["job_id"] for x in csv.DictReader(rd(r, "data/seen-jobs.csv").splitlines())}
+        check("coverage: --add adds all missing rows in one batch", rc == 0 and {"5550001", "5550002"} <= ids, out)
+    finally:
+        shutil.rmtree(r, ignore_errors=True)
+    readme = open(os.path.join(REPO, "README.md"), encoding="utf-8").read()
+    missing = [f for f in os.listdir(TOOLS) if f.endswith((".py", ".js", ".sh")) and f not in ("test_tools.py",) and f not in readme]
+    check("readme: lists every tool", not missing, str(missing))
+    import search_boards
+
+    def fake_get(url):
+        return ({"jobs": [{"title": "AI Engineer", "id": 1}]}, None) if "good" in url else (None, "HTTP 429")
+    search_boards.get = fake_get
+    items, why = search_boards.fetch("gh", "good")
+    check("search_boards: job without a location does not crash", items == [("AI Engineer", "", "1", "")] and why is None, str(items))
+    check("search_boards: failure keeps its reason", search_boards.fetch("gh", "bad") == (None, "HTTP 429"))
+    node = shutil.which("node")
+    if node:
+        js = open(os.path.join(TOOLS, "linkedin_harvest.js"), encoding="utf-8").read()
+        p = subprocess.run([node, "-e", "const AF=Object.getPrototypeOf(async function(){}).constructor; new AF('browser','PAGE_ID','sleep',process.argv[1]); console.log('syntax ok')", js],
+                           capture_output=True, text=True)
+        check("harvest: script parses and has the new-layout selectors and an empty-result diagnostic",
+              "syntax ok" in p.stdout and "currentJobId=" in js and "data-occludable-job-id" in js and "HARVEST EMPTY" in js, p.stderr[-200:])
+    else:
+        print("skip  harvest syntax: node not installed")
+
+
 def main():
     root = make_copy()
     print("testing on copy:", root)
-    for fn in (test_ledger, test_company_file, test_record, test_resumes, test_board, test_parallel, test_dashboard, test_tenant, test_sync, test_coverage):
+    for fn in (test_ledger, test_company_file, test_record, test_resumes, test_board, test_parallel, test_misc, test_dashboard, test_tenant, test_sync, test_coverage):
         try:
             fn(root)
         except Exception as e:  # a crashing test is a failure, keep going

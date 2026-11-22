@@ -23,6 +23,14 @@ PLACEHOLDER = "(paste the full job text here)"
 errors, warns = [], []
 
 
+def ignore_list():
+    """Tenant file data/consistency-ignore.json: {"no_confirmation": ["APP-009"]} downgrades that error to a warning."""
+    try:
+        return json.loads((DATA / "consistency-ignore.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
 def err(f, d):
     errors.append(f"ERROR {f}: {d}")
 
@@ -92,7 +100,7 @@ def main():
                 err(f, f"{aid} company file applications/{aid}.md missing")
             else:
                 if "- Confirmation:" not in comp:
-                    (warn if aid == "APP-009" else err)(f"applications/{aid}.md", "no '- Confirmation:' line")
+                    (warn if aid in ignore_list().get("no_confirmation", []) else err)(f"applications/{aid}.md", "no '- Confirmation:' line")
                 for s in SECTIONS:
                     if f"## {s}" not in comp:
                         err(f"applications/{aid}.md", f"missing section '{s}'")
@@ -151,6 +159,12 @@ def main():
                 err(loc, f"Applied but {aid} status is {app_by_id[aid].get('status')}")
         elif r.get("app_id") and r["app_id"] not in app_by_id:
             err(loc, f"app_id {r['app_id']} not in applications.json")
+    linked = {r.get("app_id") for r in rows if r.get("app_id")}
+    for a in apps:
+        if a.get("status") in LATER and a.get("id") not in linked:
+            warn(f, f"{a.get('id')} is {a.get('status')} but no ledger row points at it (app_id)")
+    for p in sorted(DATA.glob(".tmp-*")) + sorted(DATA.glob("*.part")):
+        warn("data/" + p.name, "leftover temp file from an interrupted write; safe to delete when no tool is running")
     counts["ledger"] = Counter(r.get("status") for r in rows)
     counts["ledger_rows"] = len(rows)
 
