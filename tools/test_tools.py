@@ -258,13 +258,19 @@ def test_record(root):
     # template markers present -> rows inserted into the template table
     wr(root, "applications/APP-901.md", open(os.path.join(REPO, "templates", "applications", "TEMPLATE.md"), encoding="utf-8").read())
     d = json.loads(rd(root, "data/applications.json"))
-    a2 = dict(app, id="APP-901", detail="applications/APP-901.md", status="Shortlisted", dateApplied="", link="https://x.test/jobs/1")
+    a2 = dict(app, id="APP-901", detail="applications/APP-901.md", status="Shortlisted", role="Other role", dateApplied="", link="https://x.test/jobs/1")
     d["apps"].append(a2)
     wr(root, "data/applications.json", json.dumps(d, indent=1, ensure_ascii=False) + "\n")
     rc, out = run(root, "record_application.py", "APP-901", "ans.json", "--no-commit")
     t = rd(root, "applications/APP-901.md")
     check("record: template table filled, cover note replaced", rc == 0 and "| Field | Answer |\n| --- | --- |\n| Name | Jane Doe |" in t
           and "## Cover note\nHello there." in t and t.count("## Submitted answers") == 1, t[:900])
+    # duplicate guard: same company and role as an applied app is refused
+    d = json.loads(rd(root, "data/applications.json"))
+    d["apps"].append(dict(app, id="APP-902", detail="applications/APP-901.md", status="Shortlisted", dateApplied=""))
+    wr(root, "data/applications.json", json.dumps(d, indent=1, ensure_ascii=False) + "\n")
+    rc, out = run(root, "record_application.py", "APP-902", "ans.json", "--no-commit")
+    check("record: duplicate company+role refused", rc != 0 and "duplicates APP-900" in out, out)
 
 
 def test_resumes(root):

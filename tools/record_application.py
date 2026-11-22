@@ -57,6 +57,15 @@ def preflight(app_id, r, force, d, vocab):
         fail(f"status '{new_status}' is not an app status ({', '.join(vocab['app_status'])})")
     if app.get("status") in LATER and not force:
         fail(f"{app_id} is already {app['status']} (applied {app.get('dateApplied') or 'unknown date'}); use --force to re-record")
+    def norm(s):
+        return re.sub(r"[^a-z0-9]+", " ", str(s or "").lower()).strip()
+    dup = [x for x in d.get("apps", []) if x.get("id") != app_id
+           and norm(x.get("company")) == norm(app.get("company"))
+           and norm(x.get("role")) == norm(app.get("role"))
+           and x.get("status") in LATER]
+    if dup and not force:
+        fail(f"{app_id} duplicates {dup[0]['id']} ({app.get('company')}, {app.get('role')}, {dup[0].get('status')}); "
+             "do not apply twice (use --force if the roles really differ)")
     ans = r.get("answers", [])
     if not isinstance(ans, list) or any(not isinstance(p, (list, tuple)) or len(p) != 2 for p in ans):
         fail("'answers' must be a list of [field, answer] pairs")
