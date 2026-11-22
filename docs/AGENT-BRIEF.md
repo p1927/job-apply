@@ -29,6 +29,11 @@ Paste this file's path into every subagent brief ("read docs/AGENT-BRIEF.md firs
 - On a mistake or correction: fix the process (a doc, a tool check), not only the instance.
 - Merge origin/main before every push; commit small and often.
 
+## Show the whole stack (owner rule 2026-11-22, HARD)
+- A profile, proposal, cover note or resume that names a project must show every stored layer the role asks for, never React alone. Read the posting, then lead with the matching stored layer: backend (Cloudflare Workers, Node.js, TypeScript, Supabase Postgres, payments, shipping, email), AI (RAG, agents, n8n automation) or frontend. Stored layers per project are in `candidate-profile.md`.
+- If the posting needs a layer that is not stored, look in the owner's repos on disk first (for example `~/Documents/GitHub/ocular-ecommerce-hub-88-288e5755`), store what you verify with its source, and only then ask one question.
+- Before sending, check the text: does it mention the layers the posting lists? If it lists Node.js or Cloudflare and the text does not, rewrite it.
+
 ## Search scope and resumes (owner rules 2026-11-22)
 - Never narrow the search without asking. The goal is to make money: full-time, contract, freelance and part-time run in parallel. Apply to each as what it is: full-time as full-time (3-month notice stays), contract as contract, freelance and part-time as freelance (start immediately). Findings from rejection analysis are suggestions, not filters.
 - Fit the profile to each role: read what the posting demands and expand the matching items already in `candidate-profile.md`. A demanded skill that is not stored is never claimed: ask the owner one question.
