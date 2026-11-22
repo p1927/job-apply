@@ -59,3 +59,9 @@ Never restate a rule in a second file; point to the owner. Each application keep
 `python3 tools/sync.py` commits and pushes everything that changed: the engine (maintainer machine only; other machines just pull updates) and the active tenant (when it is its own git repo). Run it at session end.
 
 Start with `.claude/skills/job-search/SKILL.md` for the workflow, or `.claude/skills/setup/SKILL.md` when there is no tenant.
+
+## Learned rules (self-improve writes here; repo-specific)
+- Check platform cost before building any profile (2026-11-22): cost to join, cost to apply, vetting. Upwork needs Connects, Contra needs Pro to apply; we built profiles there before checking. Prefer free-to-apply routes. Record every account in the tenant's `data/platform-accounts.md`; no passwords.
+- Name repos exactly in reports: `job-apply` (this engine) and `job-applications` (the person's private data). Verify `git remote -v` before saying a remote is missing.
+- Answer the owner in bullets of at most 10 words; give a recommendation; state the plan before outward actions.
+- Never leave work local: commit, merge to main and push in the same turn; never ask whether to merge.
