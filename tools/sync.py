@@ -20,7 +20,7 @@ import tenant
 
 COAUTHOR = "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 # Never staged, whatever the repo's own .gitignore says (pathspec magic, so no ignore file is needed in old tenants).
-EXCLUDES = [":(exclude,glob)**/.tmp-*", ":(exclude,glob)**/*.part", ":(exclude,glob)**/*.tmp", ":(exclude)data/.lock",
+EXCLUDES = [":(exclude,glob)**/.tmp-*", ":(exclude,glob)**/*.part", ":(exclude,glob)**/*.tmp", ":(exclude)data/.lock", ":(exclude).claude/worktrees",
             ":(exclude,glob)**/.lock"]
 
 
