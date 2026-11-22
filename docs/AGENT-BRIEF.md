@@ -32,6 +32,7 @@ Paste this file's path into every subagent brief ("read docs/AGENT-BRIEF.md firs
 ## Show the whole stack (owner rule 2026-11-22, HARD)
 - A profile, proposal, cover note or resume that names a project must show every stored layer the role asks for, never React alone. Read the posting, then lead with the matching stored layer: backend (Cloudflare Workers, Node.js, TypeScript, Supabase Postgres, payments, shipping, email), AI (RAG, agents, n8n automation) or frontend. Stored layers per project are in `candidate-profile.md`.
 - If the posting needs a layer that is not stored, look in the owner's repos on disk first (for example `~/Documents/GitHub/ocular-ecommerce-hub-88-288e5755`), store what you verify with its source, and only then ask one question.
+- Opticalz is freelance client work, never an employer. Employers are only ASSA ABLOY Group (AI Software Engineer, Nov 2024 to now), ASSA ABLOY Opening Solutions, Giesecke+Devrient and Capgemini. On every profile and resume, list Opticalz under projects, portfolio, freelance or "selected work", never as a company or job entry, and never with a start date that implies an employer. If a platform only has a job-history section, leave Opticalz out of it and put it in the bio, portfolio or projects field instead.
 - Before sending, check the text: does it mention the layers the posting lists? If it lists Node.js or Cloudflare and the text does not, rewrite it.
 
 ## Search scope and resumes (owner rules 2026-11-22)
