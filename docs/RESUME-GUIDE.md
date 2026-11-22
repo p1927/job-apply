@@ -29,6 +29,14 @@ AI engineer resumes
 - Job titles, dates and employers match LinkedIn exactly. The headline under the name carries the target role.
 - No em dashes. Run the checks below after every build.
 
+## Sound human (owner rule 2026-11-22: resumes read too AI-written)
+- Plain sentences with the subject implied ("Built a RAG assistant for technicians"), one concrete detail each: what, for whom, how big, which tool. Only stored facts.
+- Vary sentence length. Some short. No run of sentences of the same shape.
+- No filler: leveraged, spearheaded, passionate, robust, seamless, innovative, cutting-edge, results-driven, orchestrated, utilized, stakeholders.
+- No stacked adjectives, no tidy triplets of abstract nouns, no dashes as punctuation.
+- Fit to the posting: read what it demands, then expand the matching items already in `candidate-profile.md` (more detail, more weight, first in order). If a demanded skill is not stored, do not claim it: ask the owner one question.
+- Check: `python3 tools/check_resume_style.py` after every build; it must print 0 problems.
+
 ## Build and check
 ```bash
 python3 tools/make_resumes.py            # every config in the tenant's resume-content.json

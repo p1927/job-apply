@@ -28,3 +28,8 @@ Paste this file's path into every subagent brief ("read docs/AGENT-BRIEF.md firs
 - Never invent a constraint the owner did not state; read the primary source before stating a price, law or limit.
 - On a mistake or correction: fix the process (a doc, a tool check), not only the instance.
 - Merge origin/main before every push; commit small and often.
+
+## Search scope and resumes (owner rules 2026-11-22)
+- Never narrow the search without asking. The goal is to make money: full-time, contract, freelance and part-time run in parallel. Apply to each as what it is: full-time as full-time (3-month notice stays), contract as contract, freelance and part-time as freelance (start immediately). Findings from rejection analysis are suggestions, not filters.
+- Fit the profile to each role: read what the posting demands and expand the matching items already in `candidate-profile.md`. A demanded skill that is not stored is never claimed: ask the owner one question.
+- Resumes must read human: follow "Sound human" in `docs/RESUME-GUIDE.md` and run `python3 tools/check_resume_style.py` after every build (0 problems). Old applications are regenerated only when the owner asks.

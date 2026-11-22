@@ -127,6 +127,7 @@ Everyone who uses this gets their **own private folder** (a *tenant*) under `ten
 | `build_board.py`, `dashboard.py` | Build the static board, or run the live dashboard |
 | `sync.py` | Save and push: commits only intended files, merge only, `--status` shows what would be saved |
 | `datalock.py` | Shared helper: the data lock, atomic file writes and name matching (imported by the tools, not run) |
+| `check_resume_style.py` | Flags AI-sounding resume wording (filler words, dashes, same-length sentences); rules in `docs/RESUME-GUIDE.md` |
 | `check_consistency.py`, `check_leaks.py`, `verify_tenant.py` | Validate the data, check that tenants never mix, confirm a new setup is complete |
 | `tenant.py`, `setup_machine.py`, `sync_career_ops.sh` | Choose or create the person, set up the machine, update the optional career-ops checkout |
 | `test_tools.py` | The self-test (synthetic person, temp folders; no real data is touched) |
