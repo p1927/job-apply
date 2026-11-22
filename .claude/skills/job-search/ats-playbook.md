@@ -47,3 +47,7 @@ One row per finding, edited in place if a row already covers it.
 | Jobylon (Länsförsäkringar) | Swedish form with cookie banner (decline 'Endast nödvändiga'); radio screening questions; the CV input is hidden: tag it with a data attribute and set it through CDP DOM.getDocument + DOM.querySelector + DOM.setFileInputFiles, then read the filename on the page; phone is a country button plus number; thanks page '/thanks/' |  | 2026-10-28 |
 
 - Greenhouse react-select (Coinbase, Rubrik, Twilio, 2026-10-23): typing then Enter often does not commit; click the option by ref after a fresh snapshot. Typing "Male" lists Female too: click the option. Coinbase emails an 8-character security code to the applicant (read it from Gmail, enter it in the 8 boxes, resubmit). Coinbase and Rubrik need employment and education blocks or an NDA name; Twilio needs the AI Responsible Use Policy and demographic consent ticked.
+
+## Platform costs (checked 2026-11-22, from search summaries; unverified on official pages)
+- Upwork: free to join; applying uses Connects (10 free/month, USD 0.15 each). Contra: free profile, Pro about USD 29/month for full job access. Freelancer.com: free bids limited, Plus USD 19.99/month. Himalayas: free to apply. Lemon.io, Turing, Gun.io, Arc, Toptal: free, hard vetting.
+- Check cost before building a profile; record it in the tenant's `data/platform-accounts.md`.

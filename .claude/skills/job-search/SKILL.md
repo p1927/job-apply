@@ -77,6 +77,9 @@ After every application and every human answer, update the docs in place in the 
 ## 7. Follow-up
 Inbox and message routine is `follow-up.md` in this folder. Record rejections, interviews and offers with `python3 tools/log_outcome.py`; it updates the app status and the company file. Ledger status stays `Applied`.
 
+## 7a. Platform accounts register
+Every account, profile or application on a platform (Upwork, Contra, Lemon.io, Turing, Himalayas, LinkedIn, any job board) is recorded in the tenant's `data/platform-accounts.md` (tenant repo, e.g. job-applications), the same turn it happens: platform, status, URL, cost to join, cost to apply, what was done, next follow-up. No passwords or codes. Before building any profile, check cost to join and cost to apply and list them (see ats-playbook.md "Platform costs"). Follow-up (section 7) walks this register as well as `applications.json`.
+
 ## 8. Completion checklist
 - [ ] Every card seen has a ledger row; no `New` rows left from this session. Email alerts of the last 14 days and every queue page run this session went through `tools/coverage.py` (misses added and reviewed); the queue shows what remains.
 - [ ] Every `Not-relevant` row has a reason code.

@@ -54,3 +54,7 @@ If nothing happened, say that in one line.
 - Stop and ask on anything requesting personal data (ID numbers, bank details, date of birth), payments, or a link that asks to log in.
 - Never sign in, enter passwords, accept terms or create accounts. A login wall means: stop, tell the candidate.
 - Keep personal details out of commit messages and the digest beyond what is needed.
+
+
+## Platform accounts
+Also walk `data/platform-accounts.md`: for each platform check its inbox/messages for replies, update the row's status and next follow-up, and log real applications as usual. New account or profile? Add the row first.
