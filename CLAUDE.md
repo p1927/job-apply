@@ -65,3 +65,5 @@ Start with `.claude/skills/job-search/SKILL.md` for the workflow, or `.claude/sk
 - Name repos exactly in reports: `job-apply` (this engine) and `job-applications` (the person's private data). Verify `git remote -v` before saying a remote is missing.
 - Answer the owner in bullets of at most 10 words; give a recommendation; state the plan before outward actions.
 - Never leave work local: commit, merge to main and push in the same turn; never ask whether to merge.
+- Plan before applying (2026-11-22): before any application batch, tell the owner in short bullets which jobs, which profile/resume headline and which platform, then wait for his yes. Reading and research need no approval.
+- Never ask what can be looked up (2026-11-22): salary, rates, pay floors and facts are in `REQUIREMENTS.md`, `candidate-profile.md`, `applicant-details.md` (run `tools/find_answer.py`), and market pay comes from a web search. Ask only what nobody can find. I asked for a salary figure that was already stored (USD 100,000/yr floor).
