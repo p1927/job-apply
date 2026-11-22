@@ -63,7 +63,7 @@ Engine docs: `docs/RESUME-GUIDE.md` (resumes), `.claude/skills/job-search/ats-pl
 
 ## 4. Apply
 1. Apply on the company's own site, not LinkedIn Easy Apply, when both exist.
-2. Choose the resume per `docs/RESUME-GUIDE.md`; build it if that role type has none yet (`tools/make_resumes.py`).
+2. Read `.claude/skills/resume-writing/SKILL.md`, choose the resume per `docs/RESUME-GUIDE.md`; build it if that role type has none yet (`tools/make_resumes.py`).
 3. Save the posting text as published BEFORE applying: `python3 tools/new_company_file.py APP-0NN posting.txt` (or `-` for stdin). Postings get taken down.
 4. Fill the form using `ats-playbook.md` and `applicant-details.md`. For every question not plainly in the standard answers, run `python3 tools/find_answer.py <several wordings>` first (it searches profile, details, learned answers, requirements and every earlier application's submitted answers). Read every field back before submitting. Never leave a section blank without saying so in the report.
 5. Submit only inside a batch the person approved (approval policy in `REQUIREMENTS.md`; plan-first steps in `docs/AGENT-BRIEF.md`).

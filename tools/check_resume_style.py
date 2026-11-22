@@ -12,7 +12,8 @@ import tenant
 
 BANNED = ["leveraged", "leverage", "spearheaded", "passionate", "synergy", "cutting-edge", "state-of-the-art", "dynamic",
           "results-driven", "proven track record", "seamless", "robust", "innovative", "holistic", "world-class",
-          "orchestrated", "championed", "utilized", "utilize", "stakeholders", "best-in-class", "game-changing"]
+          "orchestrated", "championed", "utilized", "utilize", "stakeholders", "best-in-class", "game-changing", "delve", "pivotal", "showcase", "tapestry", "testament", "underscore",
+          "vibrant", "fostering", "crucial", "additionally", "in order to", "serves as", "boasts"]
 
 
 def texts(node, path=""):
@@ -34,6 +35,8 @@ def problems(text):
             out.append(f"filler word '{w}'")
     if "—" in text or "–" in text:
         out.append("dash used as punctuation")
+    if re.search(r"\bnot just\b.{0,60}\bbut\b|\bit'?s not\b.{0,40}\bit'?s\b", low):
+        out.append("'not just X, it is Y' pattern")
     sents = [s for s in re.split(r"(?<=[.!?])\s+", text) if len(s.split()) > 3]
     lens = [len(s.split()) for s in sents]
     if len(lens) >= 4 and max(lens) - min(lens) <= 3:

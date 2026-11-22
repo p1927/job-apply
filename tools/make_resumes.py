@@ -99,25 +99,80 @@ def build_md(c):
     return "\n".join(L)
 
 
-CSS = """@page{size:A4;margin:14mm 16mm}
-body{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;line-height:1.32;color:#111;margin:0}
-h1{font-size:18pt;margin:0 0 2px}h2{font-size:11.5pt;margin:12px 0 4px;border-bottom:1px solid #888;padding-bottom:1px}
-p{margin:2px 0}ul{margin:2px 0 6px 18px;padding:0}li{margin:1.5px 0}"""
+CSS = """@page{size:A4;margin:13mm 15mm}
+:root{--ink:#1b1f24;--mute:#5b6570;--accent:#1f4e79;--rule:#cfd6dd}
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;font-size:9.6pt;line-height:1.38;color:var(--ink);margin:0}
+header{border-bottom:2px solid var(--accent);padding-bottom:7px;margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;gap:14px}
+header .photo{flex:0 0 auto;width:25mm;height:25mm;border-radius:50%;object-fit:cover;border:1px solid var(--rule)}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:23pt;font-weight:600;margin:0}
+.role{font-size:10.5pt;color:var(--accent);margin:1px 0 4px;font-weight:700}
+.contact{font-size:8.3pt;color:var(--mute);margin:0}
+h2{font-size:9.4pt;text-transform:uppercase;color:var(--accent);margin:13px 0 5px;padding-bottom:2px;border-bottom:1px solid var(--rule);font-weight:700;break-after:avoid-page}
+p{margin:0 0 3px}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:8px;break-after:avoid-page}
+.head .l{font-size:10.2pt}.head .r{color:var(--mute);font-size:8.9pt;white-space:nowrap}
+ul{margin:3px 0 0 15px;padding:0}li{margin:0 0 2.4px;padding-left:1px}li::marker{color:var(--accent)}
+.skills{break-inside:avoid}.skills p{display:flex;gap:10px;margin:0 0 2.5px}.skills b{flex:0 0 118px}.skills span{flex:1}"""
 
 
-def md_to_html(md):
-    out, ul = [], False
+HEAD_RE = re.compile(r"^\*\*(.+?)\*\*(.*?)\s*\|\s*(.+)$")
+
+
+def photo_uri(c):
+    """Data URI of the tenant photo when the config asks for one (config key photo: true); None otherwise.
+    The file path comes from resume-content.json key 'photo', relative to the tenant folder. Off by default:
+    US and many EU employers prefer no photo, so turn it on per config."""
+    rel = CONTENT.get("photo")
+    if not (c.get("photo") and rel):
+        return None
+    path = os.path.join(ROOT, rel)
+    if not os.path.isfile(path):
+        print(f"WARNING photo file not found: {rel}")
+        return None
+    import base64, mimetypes
+    mime = mimetypes.guess_type(path)[0] or "image/jpeg"
+    return f"data:{mime};base64," + base64.b64encode(open(path, "rb").read()).decode()
+
+
+def md_to_html(md, photo=None):
+    """Markdown from build_md to a one-column, ATS-safe page: no tables, icons or text boxes; real text only."""
+    out, ul, section, header, sk = [], False, "", [], False
     inline = lambda t: re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html.escape(t))
+    def flush_header():
+        if header:
+            img = f"<img class='photo' src='{photo}' alt=''>" if photo else ""
+            out.append("<header><div>" + "".join(header) + f"</div>{img}</header>")
+            header.clear()
     for line in md.split("\n"):
         if line.startswith("- "):
+            m = re.match(r"- \*\*(.+?):\*\*\s*(.*)$", line)
+            if section == "skills" and m:
+                if ul: out.append("</ul>"); ul = False
+                if not sk: out.append("<div class='skills'>"); sk = True
+                out.append(f"<p><strong>{html.escape(m.group(1))}</strong><span>{html.escape(m.group(2))}</span></p>")
+                continue
             if not ul: out.append("<ul>"); ul = True
             out.append(f"<li>{inline(line[2:])}</li>"); continue
         if ul: out.append("</ul>"); ul = False
-        if line.startswith("# "): out.append(f"<h1>{inline(line[2:])}</h1>")
-        elif line.startswith("## "): out.append(f"<h2>{inline(line[3:])}</h2>")
-        elif line.strip(): out.append(f"<p>{inline(line)}</p>")
+        if sk and not line.startswith("- "): out.append("</div>"); sk = False
+        if line.startswith("# "):
+            header.append(f"<h1>{inline(line[2:])}</h1>")
+        elif line.startswith("## "):
+            flush_header()
+            title = line[3:]
+            section = "skills" if "skill" in title.lower() else ""
+            out.append(f"<h2>{inline(title)}</h2>")
+        elif not out and line.strip():
+            header.append(f"<p class='{'role' if len(header) == 1 else 'contact'}'>{inline(line.replace(' | ', ' / ') if len(header) > 1 else line)}</p>")
+        elif (m := HEAD_RE.match(line)):
+            out.append(f"<div class='head'><div class='l'><strong>{html.escape(m.group(1))}</strong>{html.escape(m.group(2))}</div><div class='r'>{html.escape(m.group(3))}</div></div>")
+        elif line.strip():
+            out.append(f"<p>{inline(line)}</p>")
     if ul: out.append("</ul>")
-    return f"<!doctype html><html><head><meta charset='utf-8'><title>{_C['name']} Resume</title><style>{CSS}</style></head><body>{''.join(out)}</body></html>"
+    if sk: out.append("</div>")
+    flush_header()
+    return f"<!doctype html><html lang='en'><head><meta charset='utf-8'><title>{_C['name']} Resume</title><style>{CSS}</style></head><body>{''.join(out)}</body></html>"
 
 
 def pdf_pages(pdf):
@@ -177,7 +232,7 @@ def build(name, out=None, pdf=True):
     warns = quality_warnings(md)
     if pdf:
         with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, encoding="utf-8") as f:
-            f.write(md_to_html(md)); tmp = f.name
+            f.write(md_to_html(md, photo_uri(c))); tmp = f.name
         prof = tempfile.mkdtemp(prefix="resume-chrome-")      # own profile: no clash with other Chrome windows or agents
         pdf_path = base + ".pdf"
         if os.path.exists(pdf_path): os.unlink(pdf_path)       # a stale file must not count as success

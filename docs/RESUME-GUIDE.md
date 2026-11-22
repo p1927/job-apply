@@ -23,6 +23,9 @@ AI engineer resumes
 - Put AI keywords in the headline and summary: the person's real AI keywords from `candidate-profile.md`.
 - Never claim a tool or technique without work behind it. Hiring managers screen for evidence.
 
+## Full guide
+The step-by-step skill is `.claude/skills/resume-writing/SKILL.md` (sound human, ATS tests, design, top skills by research, freelance work, optional photo). Read it before changing any resume. This file keeps the build commands and the choosing table.
+
 ## Rules
 (Paths are relative to the active tenant folder.)
 - Only facts from `candidate-profile.md`, which also owns the truth whitelist and blacklist. Tailoring reorders bullets and rewrites the summary; it never adds a claim.
