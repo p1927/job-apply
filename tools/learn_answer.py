@@ -13,6 +13,7 @@ import argparse, datetime as dt, os, re, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tenant
+import datalock
 
 ROOT = tenant.root()
 ENGINE = tenant.ENGINE
@@ -21,18 +22,13 @@ Q_HEAD = "| System | Behaviour | What works | Date |\n| --- | --- | --- | --- |"
 
 
 def atomic_write(path, text):
-    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".tmp-")
-    with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
-        f.write(text)
-    os.replace(tmp, path)
-
+    datalock.atomic_write(path, text, newline="")
 
 def cell(s):
     return re.sub(r"\s+", " ", (s or "").replace("|", "/")).strip()
 
 
-def norm(s):
-    return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
+norm = datalock.norm
 
 
 def upsert(text, heading, head_block, row, key_idx, key):

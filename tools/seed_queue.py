@@ -29,25 +29,26 @@ def main():
     vocab = tenant.load_vocab()
     if a.category not in vocab["categories"]:
         sys.exit(f"error: category '{a.category}' is not in the vocabulary: {', '.join(vocab['categories'])}")
-    p = L.path("data/search-queue.json")
-    doc = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {"updated": "", "queue": []}
-    q = doc.setdefault("queue", [])
-    have = {(e.get("category"), e.get("query"), e.get("location"), e.get("start")) for e in q}
-    top = max([int(m.group(1)) for e in q if (m := re.fullmatch(r"q(\d+)", str(e.get("id", ""))))] or [0])
-    added = 0
-    for query in a.query:
-        for page in range(a.pages):
-            start = page * 25
-            if (a.category, query, a.location, start) in have:
-                continue
-            top += 1
-            params = urllib.parse.urlencode({"keywords": query, "location": a.location, "f_TPR": f"r{a.recent}", "start": start})
-            q.append({"id": f"q{top:03d}", "category": a.category, "query": query, "location": a.location,
-                      "filters": {"f_TPR": f"r{a.recent}"}, "start": start, "status": "pending",
-                      "url": "https://www.linkedin.com/jobs/search/?" + params, "notes": ""})
-            added += 1
-    doc["updated"] = str(datetime.date.today())
-    L.atomic_write(p, json.dumps(doc, indent=1, ensure_ascii=False) + "\n")
+    with L.locked():
+        p = L.path("data/search-queue.json")
+        doc = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {"updated": "", "queue": []}
+        q = doc.setdefault("queue", [])
+        have = {(e.get("category"), e.get("query"), e.get("location"), e.get("start")) for e in q}
+        top = max([int(m.group(1)) for e in q if (m := re.fullmatch(r"q(\d+)", str(e.get("id", ""))))] or [0])
+        added = 0
+        for query in a.query:
+            for page in range(a.pages):
+                start = page * 25
+                if (a.category, query, a.location, start) in have:
+                    continue
+                top += 1
+                params = urllib.parse.urlencode({"keywords": query, "location": a.location, "f_TPR": f"r{a.recent}", "start": start})
+                q.append({"id": f"q{top:03d}", "category": a.category, "query": query, "location": a.location,
+                          "filters": {"f_TPR": f"r{a.recent}"}, "start": start, "status": "pending",
+                          "url": "https://www.linkedin.com/jobs/search/?" + params, "notes": ""})
+                added += 1
+        doc["updated"] = str(datetime.date.today())
+        L.atomic_write(p, json.dumps(doc, indent=1, ensure_ascii=False) + "\n")
     print(f"added {added} queue entries ({len(q)} total)")
 
 

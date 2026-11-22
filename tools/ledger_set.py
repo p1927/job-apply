@@ -12,11 +12,12 @@ Moving a row to Applied, Not-relevant or Closed clears its blocker unless --bloc
 The file is written atomically (temp file, then rename), with LF line endings and UTF-8.
 The tenant comes from tools/tenant.py (env JOBS_ROOT or JOBS_TENANT, else tenants/.active).
 """
-import argparse, csv, io, json, os, sys, tempfile
+import argparse, csv, io, json, os, re, sys
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, TOOLS_DIR)
 import tenant
+import datalock
 
 ROOT = tenant.root()          # this person's folder; the only place data is read from or written to
 ENGINE = tenant.ENGINE        # shared tools, config and templates (never holds personal data)
@@ -33,22 +34,13 @@ def path(*parts):
 
 # ---- shared helpers (also imported by record_application.py and new_company_file.py) ----
 def atomic_write(p, text):
-    """Write text to p via a temp file in the same directory, then os.replace. LF endings, UTF-8."""
-    if not tenant.inside(p, ROOT):
-        die(f"refusing to write outside the tenant folder: {p}")
-    d = os.path.dirname(p) or "."
-    os.makedirs(d, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(prefix=".tmp-", suffix=".part", dir=d)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-            f.write(text)
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(tmp, p)
-    except BaseException:
-        if os.path.exists(tmp):
-            os.unlink(tmp)
-        raise
+    """Write text to p atomically (LF, UTF-8, fsync); refuses paths outside the tenant folder."""
+    datalock.atomic_write(p, text, root=ROOT)
+
+
+def locked():
+    """Hold the tenant data lock around any read-modify-write of data/* (re-entrant, covers the READ too)."""
+    return datalock.locked(ROOT)
 
 
 def load_vocab():
@@ -143,7 +135,6 @@ def save_ledger(rows, vocab):
 
 
 def link_job_ids(link):
-    import re
     return re.findall(r"\d{6,}", link or "")
 
 
@@ -164,13 +155,14 @@ def sync_app_blocker(app_id, blocker):
     p = path("data/applications.json")
     if not os.path.exists(p):
         return False
-    d = load_apps()
-    app = next((a for a in d.get("apps", []) if a.get("id") == app_id), None)
-    if app is None or blocker is None or app.get("blocker", "") == blocker:
-        return False
-    app["blocker"] = blocker
-    atomic_write(p, dump_apps(d))
-    return True
+    with locked():
+        d = load_apps()
+        app = next((a for a in d.get("apps", []) if a.get("id") == app_id), None)
+        if app is None or blocker is None or app.get("blocker", "") == blocker:
+            return False
+        app["blocker"] = blocker
+        atomic_write(p, dump_apps(d))
+        return True
 
 
 # ---- CLI ---------------------------------------------------------------------
@@ -214,28 +206,31 @@ def build_parser():
 def main(argv):
     vocab = load_vocab()
     mapped = legacy_to_args(argv, vocab)
+    if mapped is None and argv and sum(1 for x in argv if not x.startswith("--")) > 4 and not any(x.startswith("--") for x in argv):
+        print("hint: quote the note, e.g. ledger_set.py JOB_ID Status \"the whole note\"", file=sys.stderr)
     args = build_parser().parse_args(mapped if mapped is not None else argv)
     if not any([args.status, args.reason, args.blocker is not None, args.app_id, args.note is not None,
                 args.category, args.workplace, args.source, args.add]):
         die("nothing to change; give --status, --reason, --blocker, --app-id, --note, --category, --workplace, --source or --add")
-    rows = read_ledger(vocab)
-    add = None
-    if args.add:
-        add = {"company": args.company, "title": args.title, "location": args.location}
-        if args.status is None:
-            args.status = "New"
-    if args.app_id:
-        d = load_apps() if os.path.exists(path("data/applications.json")) else {"apps": []}
-        if not any(a.get("id") == args.app_id for a in d["apps"]):
-            die(f"{args.app_id} is not in data/applications.json")
-    row, created = apply_update(vocab, rows, args.job_id, add=add, status=args.status, reason=args.reason,
-                                blocker=args.blocker, app_id=args.app_id, note=args.note, category=args.category,
-                                workplace=args.workplace, source=args.source)
-    save_ledger(rows, vocab)
-    if row["app_id"] and args.blocker is not None:
-        sync_app_blocker(row["app_id"], args.blocker)
-    print(("added " if created else "updated ") + f"{args.job_id}: status={row['status']} reason={row['reason']} "
-          f"blocker={row['blocker']} app_id={row['app_id']}")
+    with locked():
+        rows = read_ledger(vocab)
+        add = None
+        if args.add:
+            add = {"company": args.company, "title": args.title, "location": args.location}
+            if args.status is None:
+                args.status = "New"
+        if args.app_id:
+            d = load_apps() if os.path.exists(path("data/applications.json")) else {"apps": []}
+            if not any(a.get("id") == args.app_id for a in d["apps"]):
+                die(f"{args.app_id} is not in data/applications.json")
+        row, created = apply_update(vocab, rows, args.job_id, add=add, status=args.status, reason=args.reason,
+                                    blocker=args.blocker, app_id=args.app_id, note=args.note, category=args.category,
+                                    workplace=args.workplace, source=args.source)
+        save_ledger(rows, vocab)
+        if row["app_id"] and (args.blocker is not None or args.status in DONE_STATUSES):
+            sync_app_blocker(row["app_id"], row["blocker"])
+        print(("added " if created else "updated ") + f"{args.job_id}: status={row['status']} reason={row['reason']} "
+              f"blocker={row['blocker']} app_id={row['app_id']}")
 
 
 if __name__ == "__main__":

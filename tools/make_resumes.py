@@ -9,16 +9,17 @@ Usage: python3 tools/make_resumes.py                 # build every stored config
        python3 tools/make_resumes.py spotify --out applications/APP-006/Jane_Doe_Spotify_Resume
        python3 tools/make_resumes.py --new APP-052 --key acme --company Acme --headline "AI Engineer | RAG" --summary "..."
          (new config copies the base resume's bullet order; out defaults to applications/APP-052/<Name>_<Company>_Resume;
-          add --record to store the PDF path on the app in data/applications.json)
+          the PDF path is stored on the app in data/applications.json by default; --record is accepted for old callers)
        python3 tools/make_resumes.py --list | --no-pdf (markdown only)
 
 Env: CHROME_PATH (Chrome binary; default is the macOS app), the tenant comes from tools/tenant.py.
 After building it warns about more than two pages, em dashes, banned words and banned claims.
 """
-import argparse, html, json, os, re, subprocess, sys, tempfile
+import argparse, html, json, os, pathlib, re, shutil, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tenant
+import datalock
 
 ROOT = tenant.root()
 DEFAULT_CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -172,22 +173,33 @@ def build(name, out=None, pdf=True):
     base = os.path.join(ROOT, c["out"])
     os.makedirs(os.path.dirname(base), exist_ok=True)
     md = build_md(c)
-    open(base + ".md", "w", encoding="utf-8", newline="\n").write(md)
+    datalock.atomic_write(base + ".md", md, root=ROOT)
     warns = quality_warnings(md)
     if pdf:
         with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, encoding="utf-8") as f:
             f.write(md_to_html(md)); tmp = f.name
+        prof = tempfile.mkdtemp(prefix="resume-chrome-")      # own profile: no clash with other Chrome windows or agents
+        pdf_path = base + ".pdf"
+        if os.path.exists(pdf_path): os.unlink(pdf_path)       # a stale file must not count as success
         try:
-            subprocess.run([chrome_path(), "--headless", "--disable-gpu", "--no-pdf-header-footer", f"--print-to-pdf={base}.pdf", __import__("pathlib").Path(tmp).as_uri()],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True, timeout=60)
-        except subprocess.TimeoutExpired:
-            sys.exit(f"error: Chrome took longer than 60 seconds building {c['out']}.pdf")
-        except subprocess.CalledProcessError as e:
-            sys.exit(f"error: Chrome failed building {c['out']}.pdf: {(e.stderr or b'').decode(errors='replace')[-300:]}")
+            err = b""
+            for attempt in (1, 2):
+                try:
+                    r = subprocess.run([chrome_path(), "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
+                                        f"--user-data-dir={prof}", f"--print-to-pdf={pdf_path}", pathlib.Path(tmp).as_uri()],
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=60)
+                    err = r.stderr or b""
+                except subprocess.TimeoutExpired:
+                    err = b"timeout after 60 s"
+                # Chrome may print a teardown warning and exit non-zero AFTER writing a good PDF: trust the file.
+                if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 1000:
+                    break
+            else:
+                sys.exit(f"error: Chrome did not produce {c['out']}.pdf after 2 tries: {err.decode(errors='replace')[-300:]}. "
+                         "Use --no-pdf to build the markdown only.")
         finally:
             if os.path.exists(tmp): os.unlink(tmp)
-        if not os.path.exists(base + ".pdf"):
-            sys.exit(f"error: Chrome ran but {c['out']}.pdf was not created")
+            shutil.rmtree(prof, ignore_errors=True)
         warns = quality_warnings(md, base + ".pdf")
     print("built", c["out"] + (".pdf" if pdf else ".md"))
     for x in warns:
@@ -196,8 +208,11 @@ def build(name, out=None, pdf=True):
 
 
 def new_config(app_id, key, company, headline, summary):
-    if key in CONFIGS: sys.exit(f"error: config '{key}' already exists; pick another --key or build it by name")
     if not re.fullmatch(r"APP-\d{3,}", app_id): sys.exit("error: --new needs an id like APP-052")
+    if key in CONFIGS:
+        if CONFIGS[key].get("out", "").startswith(f"applications/{app_id}/"):
+            return                                  # same app, same key: rebuild instead of failing
+        sys.exit(f"error: config '{key}' already exists for another application; pick another --key")
     co = re.sub(r"[^A-Za-z0-9]", "", company or key.title())
     if "base" not in CONFIGS: sys.exit("error: resume-content.json has no 'base' config to copy")
     b = CONFIGS["base"]
@@ -211,21 +226,19 @@ def save_config(key):
     p = os.path.join(ROOT, "resume-content.json")
     doc = load_content()
     doc.setdefault("configs", {})[key] = CONFIGS[key]
-    tmp = p + ".part"
-    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(doc, f, indent=1, ensure_ascii=False)
-        f.write("\n")
-    os.replace(tmp, p)
+    datalock.atomic_write(p, json.dumps(doc, indent=1, ensure_ascii=False) + "\n", root=ROOT)
 
 
 def record_resume(app_id, out):
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import ledger_set as L
-    d = L.load_apps()
-    app = next((x for x in d["apps"] if x["id"] == app_id), None)
-    if app is None: sys.exit(f"error: {app_id} is not in data/applications.json")
-    app["resume"] = out + ".pdf"
-    L.atomic_write(L.path("data/applications.json"), L.dump_apps(d))
+    print("PDF:", out + ".pdf")                      # printed first so the work is not lost if recording fails
+    with L.locked():
+        d = L.load_apps()
+        app = next((x for x in d["apps"] if x["id"] == app_id), None)
+        if app is None: sys.exit(f"error: {app_id} is not in data/applications.json (the PDF above was built; create the app with tools/new_app.py)")
+        app["resume"] = out + ".pdf"
+        L.atomic_write(L.path("data/applications.json"), L.dump_apps(d))
     print("recorded resume path on", app_id)
 
 
@@ -247,7 +260,7 @@ def main():
     for n in names or list(CONFIGS):
         if n not in CONFIGS: sys.exit(f"error: unknown config '{n}'. Known: {', '.join(CONFIGS)}")
         out = build(n, a.out, pdf=not a.no_pdf)
-        if a.record and a.new: record_resume(a.new, out)
+        if a.new and not a.no_pdf: record_resume(a.new, out)   # --record is still accepted; recording is the default for --new
 
 
 if __name__ == "__main__":

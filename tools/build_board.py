@@ -10,6 +10,7 @@ import csv, datetime, json, os, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tenant
+import datalock
 
 ROOT = tenant.root()
 META = tenant.tenant_meta(ROOT)
@@ -22,18 +23,7 @@ FOLLOW_STATUSES = ("Applied", "Screening")
 
 
 def atomic_write(p, text):
-    d = os.path.dirname(p)
-    os.makedirs(d, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(prefix=".tmp-", suffix=".part", dir=d)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-            f.write(text)
-        os.replace(tmp, p)
-    except BaseException:
-        if os.path.exists(tmp):
-            os.unlink(tmp)
-        raise
-
+    datalock.atomic_write(p, text)
 
 def load_json(rel, default=None):
     try:

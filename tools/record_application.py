@@ -7,15 +7,19 @@ answers.json: {"date": "2026-10-21", "via": "Greenhouse form on databricks.com",
                "cover_note": "...", "confirmation": "text shown after submit", "notes": "optional",
                "status": "Applied" (optional)}
 
+The ledger row always becomes "Applied" (the ledger has no later statuses; the app keeps Screening/Interview/...).
+If the app has no ledger row one is created from the app. Optional "resume": "applications/APP-114/X.pdf" in answers.json
+sets the app's resume path (warns when the file is missing); a missing "date" means today.
 Pre-flight (nothing is written if any check fails): the app exists, its detail file exists, the app is not already
 Applied (or later) unless --force, the date is valid, the answers have the right shape, the CSV header is the new schema.
-Default is commit without push. Push with --push or env JOBS_PUSH=1 (runs git pull --rebase --autostash first).
+Default is commit without push. Push with --push or env JOBS_PUSH=1 (runs git pull --no-rebase first: merge only, never rebase or autostash).
 Only the files this tool changed are added and committed. The tenant comes from tools/tenant.py. It commits only when the tenant folder is its own git repo.
 """
 import argparse, datetime, json, os, re, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ledger_set as L
+import datalock
 
 ROOT = L.ROOT
 COAUTHOR = "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
@@ -39,7 +43,7 @@ def preflight(app_id, r, force, d, vocab):
     app = next((x for x in d.get("apps", []) if x.get("id") == app_id), None)
     if app is None:
         fail(f"{app_id} is not in data/applications.json")
-    day = parse_date(r.get("date"))
+    day = parse_date(r.get("date") or str(datetime.date.today()))
     if day is None:
         fail(f"answers.json 'date' must be YYYY-MM-DD, got {r.get('date')!r}")
     if day > datetime.date.today() + datetime.timedelta(days=1) and not force:
@@ -48,7 +52,7 @@ def preflight(app_id, r, force, d, vocab):
     if not detail:
         fail(f"{app_id} has no detail path. Run: python3 tools/new_company_file.py {app_id} posting.txt")
     dp = os.path.normpath(os.path.join(ROOT, detail))
-    if not dp.startswith(os.path.normpath(ROOT) + os.sep):
+    if not L.tenant.inside(dp, ROOT):
         fail(f"detail path {detail} points outside the repo")
     if not os.path.isfile(dp):
         fail(f"detail file {detail} does not exist. Run: python3 tools/new_company_file.py {app_id} posting.txt")
@@ -57,8 +61,7 @@ def preflight(app_id, r, force, d, vocab):
         fail(f"status '{new_status}' is not an app status ({', '.join(vocab['app_status'])})")
     if app.get("status") in LATER and not force:
         fail(f"{app_id} is already {app['status']} (applied {app.get('dateApplied') or 'unknown date'}); use --force to re-record")
-    def norm(s):
-        return re.sub(r"[^a-z0-9]+", " ", str(s or "").lower()).strip()
+    norm = datalock.norm
     dup = [x for x in d.get("apps", []) if x.get("id") != app_id
            and norm(x.get("company")) == norm(app.get("company"))
            and norm(x.get("role")) == norm(app.get("role"))
@@ -118,6 +121,8 @@ def edit_company_file(t, app, status, day, r):
     elif cover not in m.group(1):
         t = t[:m.end(1)].rstrip("\n") + f"\n\nCover note as sent on {day}:\n{cover}\n\n" + t[m.end(1):]
     due = day + datetime.timedelta(days=7)
+    if f"## Submission record ({day})" in t and f"- Confirmation: {r['confirmation']}" in t:
+        return t       # same record already present (a --force re-record): do not duplicate the block
     t = t.rstrip("\n") + (f"\n\n## Submission record ({day})\n- Submitted via: {r['via']}\n"
                           f"- Confirmation: {r['confirmation']}\n- Follow-up check due: {due}\n")
     return t
@@ -146,10 +151,10 @@ def commit_and_push(paths, app_id, company, push):
     if not push:
         print("not pushed (use --push or JOBS_PUSH=1)")
         return
-    pull = git("pull", "--rebase", "--autostash", check=False)
+    pull = git("pull", "--no-rebase", "--no-edit", check=False)
     if pull.returncode != 0:
-        print("COMMIT IS SAFE LOCALLY, push skipped: git pull --rebase failed:\n" + pull.stderr.strip() +
-              "\nRecovery: resolve with 'git rebase --abort' or fix conflicts, then run 'git push origin main'.")
+        print("COMMIT IS SAFE LOCALLY, push skipped: git pull (merge) failed:\n" + pull.stderr.strip() +
+              "\nRecovery: Claude resolves the merge conflict, then pushes; nothing is lost.")
         return
     branch = git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip() or "main"
     ps = git("push", "-q", "origin", branch, check=False)
@@ -170,6 +175,10 @@ def build_changes(app_id, r, force, vocab):
         changes[dp] = edit_company_file(f.read(), app, new_status, day, r)
     app["status"] = new_status
     app["dateApplied"] = str(day)
+    if r.get("resume"):
+        if not os.path.isfile(L.path(r["resume"])):
+            print(f"WARNING: resume file {r['resume']} does not exist yet")
+        app["resume"] = r["resume"]
     if r.get("notes"):
         app["notes"] = (app.get("notes", "") + " " + r["notes"]).strip()
     fu = app.get("followUp") if isinstance(app.get("followUp"), dict) else {}
@@ -184,7 +193,11 @@ def build_changes(app_id, r, force, vocab):
     if rows is not None:
         row = L.find_row_for_app(rows, app)
         if row is None:
-            ledger_note = "no ledger row found for this app (add one with ledger_set.py --add --app-id)"
+            jid = (L.link_job_ids(app.get("link")) or [app_id.lower()])[0]
+            L.apply_update(vocab, rows, jid, add={"company": app["company"], "title": app["role"], "location": app.get("location", ""),
+                                                  "category": app.get("category", "Other")}, status="Applied", app_id=app_id)
+            changes[L.path("data/seen-jobs.csv")] = L.ledger_text(rows, vocab)
+            ledger_note = f"no ledger row existed: created row {jid} as Applied"
         else:
             L.apply_update(vocab, rows, row["job_id"], status="Applied", app_id=app_id)
             changes[L.path("data/seen-jobs.csv")] = L.ledger_text(rows, vocab)
@@ -205,13 +218,25 @@ def main():
     except (OSError, ValueError) as e:
         fail(f"cannot read {a.answers}: {e}")
     vocab = L.load_vocab()
+    with L.locked():       # read, pre-flight and write are one critical section; git runs after it is released
+        done = record_locked(a, r, vocab, push)
+    if done is None:
+        return
+    app, paths = done
+    if a.no_commit or not in_git_repo():
+        print("files updated; not committed" + ("" if in_git_repo() else " (not a git repo)"))
+        return
+    commit(app, paths, a, push)
+
+
+def record_locked(a, r, vocab, push):
     app, changes, ledger_note = build_changes(a.app_id, r, a.force, vocab)
     print(f"pre-flight ok for {a.app_id} ({app['company']}); {ledger_note}")
     if a.dry_run:
         for p in changes:
             print("would write", os.path.relpath(p, ROOT))
         print("would rebuild board/index.html and applications-ledger.md; would commit" + (" and push" if push else ", no push"))
-        return
+        return None
     backups = {}
     try:
         for p, text in changes.items():
@@ -229,9 +254,10 @@ def main():
     paths = list(changes) + [L.path("board/index.html"), L.path("applications-ledger.md")]
     paths = [p for p in paths if os.path.exists(p)]
     print("recorded", a.app_id)
-    if a.no_commit or not in_git_repo():
-        print("files updated; not committed" + ("" if in_git_repo() else " (not a git repo)"))
-        return
+    return app, paths
+
+
+def commit(app, paths, a, push):
     try:
         commit_and_push(paths, a.app_id, app["company"], push)
     except subprocess.CalledProcessError as e:

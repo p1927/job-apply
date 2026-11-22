@@ -74,41 +74,42 @@ def main():
     ap.add_argument("app_id"); ap.add_argument("posting", nargs="?")
     ap.add_argument("--force", action="store_true"); ap.add_argument("--stub", action="store_true")
     a = ap.parse_args()
-    d = L.load_apps()
-    app = next((x for x in d["apps"] if x["id"] == a.app_id), None)
-    if app is None:
-        sys.exit(f"error: {a.app_id} is not in data/applications.json")
-    if a.posting:
-        body = read_posting(a.posting).strip()
-        if not body:
-            sys.exit("error: the posting text is empty")
-    elif a.stub:
-        body = STUB_TEXT
-    else:
-        sys.exit("error: no posting text given. Pass a file (or '-' for stdin), or --stub to write a marked stub.")
-    pp = L.path(f"applications/{a.app_id}-posting.md")
-    if os.path.exists(pp) and not a.force:
-        sys.exit(f"error: {os.path.relpath(pp, ROOT)} already exists; use --force to overwrite it. Nothing was changed.")
+    with L.locked():
+        d = L.load_apps()
+        app = next((x for x in d["apps"] if x["id"] == a.app_id), None)
+        if app is None:
+            sys.exit(f"error: {a.app_id} is not in data/applications.json")
+        if a.posting:
+            body = read_posting(a.posting).strip()
+            if not body:
+                sys.exit("error: the posting text is empty")
+        elif a.stub:
+            body = STUB_TEXT
+        else:
+            sys.exit("error: no posting text given. Pass a file (or '-' for stdin), or --stub to write a marked stub.")
+        pp = L.path(f"applications/{a.app_id}-posting.md")
+        if os.path.exists(pp) and not a.force:
+            sys.exit(f"error: {os.path.relpath(pp, ROOT)} already exists; use --force to overwrite it. Nothing was changed.")
 
-    detail = (app.get("detail") or "").strip()
-    created = False
-    if detail and os.path.isfile(L.path(detail)):
-        with open(L.path(detail), encoding="utf-8") as f:
-            t = f.read()
-    else:
-        detail = detail or f"applications/{a.app_id}.md"
-        t = from_template(app, a.app_id)
-        created = True
-    t, added = add_missing(t, a.app_id)
+        detail = (app.get("detail") or "").strip()
+        created = False
+        if detail and os.path.isfile(L.path(detail)):
+            with open(L.path(detail), encoding="utf-8") as f:
+                t = f.read()
+        else:
+            detail = detail or f"applications/{a.app_id}.md"
+            t = from_template(app, a.app_id)
+            created = True
+        t, added = add_missing(t, a.app_id)
 
-    posting = (f"# {a.app_id} posting as published: {app['company']} : {app['role']}\n\n- Source: {app.get('link', '')}\n"
-               f"- Captured: {datetime.date.today()}\n- Location / mode: {app.get('location', '')} / {app.get('mode', '')}\n"
-               f"- Pay as posted: {app.get('pay', '')}\n\n## Job text\n\n{body}\n")
-    L.atomic_write(pp, posting)
-    L.atomic_write(L.path(detail), t)
-    if app.get("detail") != detail:
-        app["detail"] = detail
-        L.atomic_write(L.path("data/applications.json"), L.dump_apps(d))
+        posting = (f"# {a.app_id} posting as published: {app['company']} : {app['role']}\n\n- Source: {app.get('link', '')}\n"
+                   f"- Captured: {datetime.date.today()}\n- Location / mode: {app.get('location', '')} / {app.get('mode', '')}\n"
+                   f"- Pay as posted: {app.get('pay', '')}\n\n## Job text\n\n{body}\n")
+        L.atomic_write(pp, posting)
+        L.atomic_write(L.path(detail), t)
+        if app.get("detail") != detail:
+            app["detail"] = detail
+            L.atomic_write(L.path("data/applications.json"), L.dump_apps(d))
     print(f"ok {a.app_id}: wrote {os.path.relpath(pp, ROOT)}; "
           + (f"created {detail} from template; " if created else "") + ("added sections: " + ", ".join(added) if added else "no sections missing")
           + ("; STUB posting, fill it in before applying" if body == STUB_TEXT else ""))

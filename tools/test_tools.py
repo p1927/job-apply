@@ -288,6 +288,18 @@ def test_resumes(root):
     check("resumes: --out override", rc == 0 and os.path.exists(os.path.join(root, "applications/APP-900/alt.md")), out)
     rc, out = run(root, "make_resumes.py", "base", "--out", "applications/APP-900/Jane_Doe_TestCo_Resume", env={"CHROME_PATH": "/nonexistent/chrome"})
     check("resumes: missing Chrome gives clear error", rc != 0 and "CHROME_PATH" in out, out)
+    fake = os.path.join(root, "fake-chrome.sh")
+    wr(root, "fake-chrome.sh", '#!/bin/sh\nfor a in "$@"; do case $a in --print-to-pdf=*) f=${a#--print-to-pdf=};; esac; done\nhead -c 5000 /dev/zero > "$f"\necho "Teardown watchdog expired" >&2\nexit 1\n')
+    os.chmod(fake, 0o755)
+    rc, out = run(root, "make_resumes.py", "--new", "APP-900", "--key", "wd", "--company", "Wd", "--headline", "H", "--summary", "S", env={"CHROME_PATH": fake})
+    check("resumes: PDF trusted and path recorded when Chrome exits non-zero after writing", rc == 0 and "Wd_Resume.pdf" in rd(root, "data/applications.json"), out)
+    rc, out = run(root, "make_resumes.py", "--new", "APP-900", "--key", "wd", "--company", "Wd", "--headline", "H", "--summary", "S", env={"CHROME_PATH": fake})
+    check("resumes: same app and key rebuilds instead of failing", rc == 0, out)
+    rc, out = run(root, "make_resumes.py", "--new", "APP-901", "--key", "wd", "--headline", "H", "--summary", "S", "--no-pdf")
+    check("resumes: same key for another app is refused", rc != 0 and "another application" in out, out)
+    wr(root, "fake-bad.sh", "#!/bin/sh\nexit 1\n"); os.chmod(os.path.join(root, "fake-bad.sh"), 0o755)
+    rc, out = run(root, "make_resumes.py", "base", "--out", "applications/APP-900/nopdf", env={"CHROME_PATH": os.path.join(root, "fake-bad.sh")})
+    check("resumes: Chrome that writes nothing gives a clear error", rc != 0 and "did not produce" in out, out)
     chrome = os.environ.get("CHROME_PATH") or "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
     if os.path.exists(chrome):
         rc, out = run(root, "make_resumes.py", "base", "--out", "applications/APP-900/Jane_Doe_TestCo_Resume")
@@ -403,6 +415,32 @@ def test_sync(root):
     shutil.rmtree(base, ignore_errors=True)
 
 
+def test_parallel(root):
+    """Parallel agents: new_app.py hands out distinct ids, and parallel ledger adds lose no rows."""
+    procs = [subprocess.Popen([sys.executable, os.path.join(TOOLS, "new_app.py"), "--company", f"Co{i}", "--role", "R",
+                               "--link", "https://x.test/" + str(i)], env={**os.environ, "JOBS_ROOT": root},
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=root) for i in range(12)]
+    ids = [p.communicate()[0].strip().splitlines()[-1] for p in procs]
+    check("parallel: 12 new apps get 12 distinct ids", len(set(ids)) == 12, str(sorted(ids)))
+    apps = json.loads(rd(root, "data/applications.json"))["apps"]
+    check("parallel: all 12 apps are stored", sum(1 for a in apps if a["id"] in ids) == 12)
+    check("parallel: new app has the full schema keys", all(k in apps[-1] for k in ("bigTech", "fit", "checks", "learn", "links", "resume", "detail", "tag", "verdict", "blocker")))
+    rc, out = run(root, "new_app.py", "--company", "Co3", "--role", "R", "--link", "https://x.test/3")
+    check("parallel: same Shortlisted company+role returns the existing id", rc == 0 and "exists" in out, out)
+    procs = [subprocess.Popen([sys.executable, os.path.join(TOOLS, "ledger_set.py"), str(7000000 + i), "--add", "--company", f"Row{i}",
+                               "--title", "T", "--location", "X"], env={**os.environ, "JOBS_ROOT": root},
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=root) for i in range(16)]
+    for p in procs:
+        p.communicate()
+    rows = list(csv.DictReader(rd(root, "data/seen-jobs.csv").splitlines()))
+    got = {r["job_id"] for r in rows}
+    check("parallel: 16 ledger adds all survive", all(str(7000000 + i) in got for i in range(16)), str(len(got)))
+    rc, out = run(root, "new_app.py", "--company", "Linked", "--role", "R", "--link", "https://x.test/l", "--job-id", "7000001")
+    row = next(r for r in csv.DictReader(rd(root, "data/seen-jobs.csv").splitlines()) if r["job_id"] == "7000001")
+    check("parallel: --job-id links the ledger row", rc == 0 and row["app_id"] == out.strip().splitlines()[-1], out)
+    check("parallel: lock file is not committed by tools (named data/.lock)", os.path.exists(os.path.join(root, "data", ".lock")))
+
+
 def test_dashboard(root):
     import http.client, time, urllib.request
     wr(root, "applications/APP-001-posting.md", "# Posting\n\nAs published.\n")
@@ -480,7 +518,7 @@ def test_coverage(root):
 def main():
     root = make_copy()
     print("testing on copy:", root)
-    for fn in (test_ledger, test_company_file, test_record, test_resumes, test_board, test_dashboard, test_tenant, test_sync, test_coverage):
+    for fn in (test_ledger, test_company_file, test_record, test_resumes, test_board, test_parallel, test_dashboard, test_tenant, test_sync, test_coverage):
         try:
             fn(root)
         except Exception as e:  # a crashing test is a failure, keep going
