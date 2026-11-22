@@ -75,7 +75,5 @@ Start with `.claude/skills/job-search/SKILL.md` for the workflow, or `.claude/sk
 - Agent and subagent behaviour (look up first, store answers, one question at a time, plan before applying, bullets of at most 10 words, verify, backlog, never leave work local): `docs/AGENT-BRIEF.md`.
 - Platform profiles: cost first (`.claude/skills/job-search/SKILL.md` section 7a).
 - Name repos exactly in reports: `job-apply` (this engine) and `job-applications` (the person's private data). Verify `git remote -v` before saying a remote is missing.
-
-## Learned rules
 - 2026-11-22 (owner, HARD): never ask the owner for something you can fetch or find yourself. A file (for example the LinkedIn photo), a fact, a path or a choice already answered: search first (disk incl. the browser download history `~/Library/Application Support/BrowserClaw/Default/History`, session transcripts, tenant files, `candidate-profile.md`, `applicant-details.md`), then fetch it from the source in BrowserOS neo (the owner is signed in). Say "I don't have X" only after those steps, and say which ones you ran. Ask only for passwords, CAPTCHAs, 2FA, payment and true personal decisions.
 - 2026-11-22: a bulk resume rebuild must never touch resumes that were sent (`make_resumes.py` now skips them).
